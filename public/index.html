@@ -81,7 +81,6 @@
             gap: 15px;
         }
 
-        /* Layout Principal 2 Colonnes */
         #room-layout {
             display: grid;
             grid-template-columns: 1fr 380px;
@@ -134,9 +133,7 @@
             font-size: 0.9rem;
         }
 
-        input:focus {
-            border-color: var(--accent-primary);
-        }
+        input:focus { border-color: var(--accent-primary); }
 
         button {
             padding: 10px 20px;
@@ -161,6 +158,7 @@
 
         .btn-block { width: 100%; }
         .btn-secondary { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
         .btn-danger { background: linear-gradient(135deg, #ff0055 0%, #990033 100%); }
 
         .media-container {
@@ -210,7 +208,7 @@
             background: var(--accent-primary);
         }
 
-        /* Zone de Discussion & Utilisateurs */
+        /* Users & Chat */
         .users-badge {
             background: #00f2fe;
             color: #000;
@@ -242,7 +240,6 @@
             align-items: center;
             gap: 5px;
         }
-        .user-tag i { color: #00f2fe; font-size: 0.7rem;}
 
         .chat-box {
             height: 250px;
@@ -264,7 +261,6 @@
         }
         .chat-msg .name {
             font-weight: 700;
-            color: #ff007f;
             margin-right: 5px;
         }
         .chat-msg.system {
@@ -277,9 +273,9 @@
             border-radius: 4px;
         }
 
-        /* Playlist / File d'attente */
+        /* Playlist */
         .playlist-box {
-            max-height: 200px;
+            max-height: 230px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -292,22 +288,28 @@
             align-items: center;
             justify-content: space-between;
             background: rgba(255, 255, 255, 0.04);
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 8px;
             font-size: 0.85rem;
             border-left: 3px solid var(--accent-primary);
         }
 
-        .playlist-item span {
+        .playlist-item .title-text {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 220px;
+            max-width: 190px;
+        }
+
+        .playlist-actions {
+            display: flex;
+            gap: 4px;
         }
 
         .playlist-item button {
-            padding: 4px 8px;
+            padding: 5px 8px;
             font-size: 0.75rem;
+            border-radius: 6px;
         }
 
         .empty-playlist {
@@ -327,7 +329,6 @@
             <p>Salons synchronisés en temps réel.</p>
         </header>
         
-        <!-- ÉCRAN D'AUTHENTIFICATION -->
         <div id="auth-screen">
             <div class="card" style="grid-column: 1 / -1; margin-bottom: 10px;">
                 <h3><i class="fa-solid fa-user-astronaut"></i> Votre Profil</h3>
@@ -346,12 +347,10 @@
             </div>
         </div>
 
-        <!-- ÉCRAN DU SALON DE LECTURE -->
         <div id="room-screen">
             <div class="room-status" id="room-display-id">Connecté</div>
 
             <div id="room-layout">
-                <!-- COLONNE GAUCHE : LECTEUR VIDÉO -->
                 <div class="left-col">
                     <div class="card">
                         <h3><i class="fa-solid fa-play-pause"></i> Lecteur Vidéo Synchro</h3>
@@ -370,27 +369,22 @@
                     </div>
                 </div>
 
-                <!-- COLONNE DROITE : USERS, CHAT, PLAYLIST -->
                 <div class="right-col">
-                    <!-- MEMBRES & DISCUSSION -->
                     <div class="card">
                         <h3>
                             <i class="fa-solid fa-comments"></i> Salon & Chat 
                             <span class="users-badge" id="user-count">0</span>
                         </h3>
                         
-                        <!-- Liste des utilisateurs (Amélioration 3) -->
                         <div class="user-list" id="users-container"></div>
-
-                        <!-- Chat Textuel (Amélioration 1) -->
                         <div class="chat-box" id="chat-messages"></div>
+                        
                         <div class="input-group">
                             <input type="text" id="chat-input" placeholder="Écrire un message...">
                             <button id="send-chat-btn"><i class="fa-solid fa-paper-plane"></i></button>
                         </div>
                     </div>
 
-                    <!-- PLAYLIST / FILE D'ATTENTE (Amélioration 2) -->
                     <div class="card">
                         <h3><i class="fa-solid fa-list-ol"></i> File d'attente</h3>
                         <div class="input-group">
@@ -411,7 +405,6 @@
     <script>
         const socket = io();
         
-        // Sélecteurs d'éléments
         const authScreen = document.getElementById('auth-screen');
         const roomScreen = document.getElementById('room-screen');
         const roomDisplayId = document.getElementById('room-display-id');
@@ -424,7 +417,6 @@
         const mediaBox = document.getElementById('media-box');
         const videoVolumeSlider = document.getElementById('video-volume');
         
-        // Sélecteurs Nouveautés
         const userCount = document.getElementById('user-count');
         const usersContainer = document.getElementById('users-container');
         const chatMessages = document.getElementById('chat-messages');
@@ -438,13 +430,9 @@
         let isSyncing = false;
         let ytPlayer = null;
         let ytLastState = -1;
-        let activePlaylist = [];
 
-        // Gestion URL Directe
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('room')) {
-            initializeRoom(urlParams.get('room'));
-        }
+        if (urlParams.get('room')) initializeRoom(urlParams.get('room'));
 
         if (btnCreateRoom) btnCreateRoom.addEventListener('click', () => initializeRoom('room-' + Math.random().toString(36).substring(2, 9)));
         if (btnJoinRoom) btnJoinRoom.addEventListener('click', () => roomInput.value.trim() && initializeRoom(roomInput.value.trim()));
@@ -453,30 +441,31 @@
             currentRoomId = roomId;
             const pseudo = usernameInput.value.trim() || 'Invité';
             window.history.pushState({}, '', `?room=${roomId}`);
-            
             socket.emit('join-room', { roomId, username: pseudo });
-            
             authScreen.style.display = 'none';
             roomScreen.style.display = 'block';
             roomDisplayId.innerHTML = `<i class="fa-solid fa-circle-check"></i> Salon : <strong>${roomId}</strong>`;
         }
 
-        // --- GESTION DU VOLUMES ---
         videoVolumeSlider.addEventListener('input', (e) => {
             const vp = document.getElementById('video-player');
             if (vp) vp.volume = e.target.value / 100;
             if (ytPlayer && typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(e.target.value);
         });
 
-        // --- ENVOI DES ACTIONS MÉDIAS ---
         if (btnLoadVideo) {
             btnLoadVideo.addEventListener('click', () => {
                 const url = videoUrlInput.value.trim();
                 if (url && currentRoomId) {
-                    loadMediaSource(url);
-                    socket.emit('change-video', { roomId: currentRoomId, videoUrl: url });
+                    forcePlayVideo(url);
                 }
             });
+        }
+
+        // Fonction centrale pour forcer la lecture d'un lien (local ou playlist)
+        function forcePlayVideo(url) {
+            loadMediaSource(url);
+            socket.emit('change-video', { roomId: currentRoomId, videoUrl: url });
         }
 
         function loadMediaSource(url) {
@@ -505,15 +494,17 @@
                         vp.volume = videoVolumeSlider.value / 100;
                         vp.onplay = () => !isSyncing && socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: vp.currentTime });
                         vp.onpause = () => !isSyncing && socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: vp.currentTime });
-                        
-                        // Quand la vidéo MP4 se termine, lancer la suite de la playlist
-                        vp.onended = () => playNextInPlaylist();
                     }
                 }, 200);
             }
         }
 
-        // --- AMÉLIORATION 1 : ENVOI DISCUSSION CHAT ---
+        // Fonction déclenchée par le bouton "Lancer" de la file d'attente
+        function launchFromPlaylist(url, id) {
+            forcePlayVideo(url);
+            socket.emit('remove-from-playlist', { itemId: id });
+        }
+
         function sendChatMessage() {
             const msg = chatInput.value.trim();
             if (msg) {
@@ -524,7 +515,6 @@
         btnSendChat.addEventListener('click', sendChatMessage);
         chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
 
-        // --- AMÉLIORATION 2 : GESTION PLAYLIST ---
         btnAddPlaylist.addEventListener('click', () => {
             const url = playlistUrlInput.value.trim();
             if (url) {
@@ -533,39 +523,29 @@
             }
         });
 
-        function playNextInPlaylist() {
-            if (activePlaylist.length > 0) {
-                const nextVideo = activePlaylist[0];
-                loadMediaSource(nextVideo.url);
-                socket.emit('change-video', { roomId: currentRoomId, videoUrl: nextVideo.url });
-                socket.emit('remove-from-playlist', { itemId: nextVideo.id });
-            }
-        }
+        // RECEPTION SOCKETS
 
-        // --- RECEPTION SOCKETS / MISES À JOUR ---
-
-        // Mise à jour de la liste des membres (Amélioration 3)
+        // Les tags utilisateurs se parent de leur couleur respective
         socket.on('update-users', (usersList) => {
             userCount.innerText = usersList.length;
             usersContainer.innerHTML = '';
             usersList.forEach(user => {
-                usersContainer.innerHTML += `<div class="user-tag"><i class="fa-solid fa-user"></i> ${user}</div>`;
+                usersContainer.innerHTML += `<div class="user-tag" style="border-color: ${user.color}44;"><i class="fa-solid fa-user" style="color: ${user.color};"></i> ${user.username}</div>`;
             });
         });
 
-        // Distribution des messages du Chat (Amélioration 1)
-        socket.on('chat-message', ({ username, message, isSystem }) => {
+        // Les messages s'affichent avec la couleur unique de l'émetteur
+        socket.on('chat-message', ({ username, message, color, isSystem }) => {
             if (isSystem) {
                 chatMessages.innerHTML += `<div class="chat-msg system">${message}</div>`;
             } else {
-                chatMessages.innerHTML += `<div class="chat-msg"><span class="name">${username}:</span>${message}</div>`;
+                chatMessages.innerHTML += `<div class="chat-msg"><span class="name" style="color: ${color};">${username}:</span>${message}</div>`;
             }
-            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto scroll vers le bas
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
-        // Mise à jour visuelle de la playlist (Amélioration 2)
+        // Rendu de la file d'attente avec bouton Lancer Synchro + bouton Supprimer
         socket.on('update-playlist', (playlist) => {
-            activePlaylist = playlist;
             playlistContainer.innerHTML = '';
             if (playlist.length === 0) {
                 playlistContainer.innerHTML = '<div class="empty-playlist">Aucune vidéo en attente</div>';
@@ -574,14 +554,16 @@
             playlist.forEach((item, index) => {
                 playlistContainer.innerHTML += `
                     <div class="playlist-item">
-                        <span><strong>#${index+1}</strong> ${item.title}</span>
-                        <button class="btn-danger" onclick="socket.emit('remove-from-playlist', { itemId: '${item.id}' })"><i class="fa-solid fa-trash"></i></button>
+                        <span class="title-text"><strong>#${index+1}</strong> ${item.title}</span>
+                        <div class="playlist-actions">
+                            <button class="btn-success" onclick="launchFromPlaylist('${item.url}', '${item.id}')" title="Lancer pour tout le monde"><i class="fa-solid fa-play"></i></button>
+                            <button class="btn-danger" onclick="socket.emit('remove-from-playlist', { itemId: '${item.id}' })" title="Supprimer de la file"><i class="fa-solid fa-trash"></i></button>
+                        </div>
                     </div>
                 `;
             });
         });
 
-        // Synchro commandes vidéo classiques
         socket.on('user-changed-video', ({ videoUrl }) => loadMediaSource(videoUrl));
         socket.on('user-video-action', ({ action, currentTime }) => {
             isSyncing = true;
@@ -590,10 +572,7 @@
                 action === 'play' ? ytPlayer.playVideo() : ytPlayer.pauseVideo();
             } else {
                 const vp = document.getElementById('video-player');
-                if (vp) { 
-                    vp.currentTime = currentTime; 
-                    action === 'play' ? vp.play().catch(()=>{}) : vp.pause(); 
-                }
+                if (vp) { vp.currentTime = currentTime; action === 'play' ? vp.play().catch(()=>{}) : vp.pause(); }
             }
             setTimeout(() => isSyncing = false, 300);
         });

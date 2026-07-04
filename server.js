@@ -10,79 +10,85 @@ const io = new Server(server);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Stockage en mémoire de l'état des salons
-// Structure : roomsData[roomId] = { playlist: [], users: { socketId: username } }
 const roomsData = {};
+
+// Liste de couleurs sympas et bien visibles sur fond sombre
+const CHAT_COLORS = [
+    '#ff007f', '#00f2fe', '#4facfe', '#00ff87', 
+    '#f9d423', '#ff4e50', '#e100ff', '#00ffcc',
+    '#ff9900', '#ff5e62', '#38ef7d', '#b3ebe6'
+];
 
 io.on('connection', (socket) => {
     console.log(`[Connecté] Un utilisateur s'est connecté : ${socket.id}`);
 
-    // Rejoindre un salon
     socket.on('join-room', ({ roomId, username }) => {
         socket.join(roomId);
         socket.roomId = roomId;
         
-        // Nettoyage du pseudo
         const user = username ? username.trim() : 'Anonyme';
         socket.username = user;
 
-        // Initialiser les données du salon si inexistant
+        // Choix d'une couleur aléatoire pour cet utilisateur
+        socket.userColor = CHAT_COLORS[Math.floor(Math.random() * CHAT_COLORS.length)];
+
         if (!roomsData[roomId]) {
             roomsData[roomId] = {
                 playlist: [],
-                users: {}
+                users: {} // socketId: { username, color }
             };
         }
 
-        // Ajouter l'utilisateur
-        roomsData[roomId].users[socket.id] = user;
+        roomsData[roomId].users[socket.id] = {
+            username: user,
+            color: socket.userColor
+        };
 
         console.log(`[Salon ${roomId}] ${user} a rejoint.`);
 
-        // 1. Envoyer la liste mise à jour de tous les utilisateurs du salon
+        // Envoyer la liste mise à jour des utilisateurs (avec leurs couleurs)
         io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
 
-        // 2. Lui envoyer l'état actuel de la playlist du salon
+        // Envoyer la playlist actuelle
         socket.emit('update-playlist', roomsData[roomId].playlist);
 
-        // 3. Notifier le chat du salon
+        // Message système
         io.to(roomId).emit('chat-message', {
             username: 'Système',
             message: `${user} a rejoint le salon.`,
+            color: '#9ca3af',
             isSystem: true
         });
     });
 
-    // Gestion du Chat
+    // Envoi de message avec couleur persistante
     socket.on('send-chat-message', ({ message }) => {
         const roomId = socket.roomId;
         if (roomId && message && message.trim() !== '') {
             io.to(roomId).emit('chat-message', {
                 username: socket.username || 'Anonyme',
                 message: message.trim(),
+                color: socket.userColor || '#ffffff',
                 isSystem: false
             });
         }
     });
 
-    // Contrôle Vidéo (Play/Pause/Seek)
     socket.on('video-action', (data) => {
         if (socket.roomId) {
             socket.to(socket.roomId).emit('user-video-action', data);
         }
     });
 
-    // Changement immédiat de vidéo
     socket.on('change-video', (data) => {
         if (socket.roomId) {
             socket.to(socket.roomId).emit('user-changed-video', data);
         }
     });
 
-    // Gestion de la Playlist (Ajout à la file)
     socket.on('add-to-playlist', ({ videoUrl }) => {
         const roomId = socket.roomId;
         if (roomId && videoUrl) {
-            // Extraction rapide d'un titre lisible
             let title = "Vidéo externe";
             if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
                 title = "Vidéo YouTube";
@@ -94,16 +100,9 @@ io.on('connection', (socket) => {
             roomsData[roomId].playlist.push(newItem);
 
             io.to(roomId).emit('update-playlist', roomsData[roomId].playlist);
-            
-            io.to(roomId).emit('chat-message', {
-                username: 'Système',
-                message: `Une vidéo a été ajoutée à la file d'attente.`,
-                isSystem: true
-            });
         }
     });
 
-    // Retirer ou passer à la vidéo suivante dans la playlist
     socket.on('remove-from-playlist', ({ itemId }) => {
         const roomId = socket.roomId;
         if (roomId && roomsData[roomId]) {
@@ -112,31 +111,28 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Déconnexion
     socket.on('disconnect', () => {
         const roomId = socket.roomId;
         if (roomId && roomsData[roomId]) {
-            const userLeaving = roomsData[roomId].users[socket.id];
+            const userData = roomsData[roomId].users[socket.id];
             delete roomsData[roomId].users[socket.id];
 
-            // Mettre à jour les clients restants
             io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
 
-            if (userLeaving) {
+            if (userData) {
                 io.to(roomId).emit('chat-message', {
                     username: 'Système',
-                    message: `${userLeaving} a quitté le salon.`,
+                    message: `${userData.username} a quitté le salon.`,
+                    color: '#9ca3af',
                     isSystem: true
                 });
             }
 
-            // Nettoyer la mémoire si le salon est totalement vide
             if (Object.keys(roomsData[roomId].users).length === 0) {
                 delete roomsData[roomId];
-                console.log(`[Salon ${roomId}] Salon vide supprimé de la mémoire.`);
+                console.log(`[Salon ${roomId}] Salon vide supprimé.`);
             }
         }
-        console.log(`[Déconnecté] L'utilisateur a quitté : ${socket.id}`);
     });
 });
 
