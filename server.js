@@ -1,73 +1,146 @@
 const express = require('express');
-const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+const http = require('http');
+const { Server } = require('socket.io');
 const path = require('path');
 
-const PORT = process.env.PORT || 3000;
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/videos', express.static(path.join(__dirname, 'videos')));
 
-const rooms = {};
+// Stockage en mémoire de l'état des salons
+// Structure : roomsData[roomId] = { playlist: [], users: { socketId: username } }
+const roomsData = {};
 
 io.on('connection', (socket) => {
-    console.log(`Nouvelle connexion : ${socket.id}`);
+    console.log(`[Connecté] Un utilisateur s'est connecté : ${socket.id}`);
 
+    // Rejoindre un salon
     socket.on('join-room', ({ roomId, username }) => {
         socket.join(roomId);
-        if (!rooms[roomId]) {
-            rooms[roomId] = { users: [], currentVideo: null, currentAudio: null, isPlaying: false, isAudioPlaying: false };
-        }
-        rooms[roomId].users.push({ id: socket.id, username });
+        socket.roomId = roomId;
+        
+        // Nettoyage du pseudo
+        const user = username ? username.trim() : 'Anonyme';
+        socket.username = user;
 
-        // Synchronisation des médias déjà actifs pour le nouvel arrivant
-        if (rooms[roomId].currentVideo) {
-            socket.emit('user-changed-video', { videoUrl: rooms[roomId].currentVideo });
+        // Initialiser les données du salon si inexistant
+        if (!roomsData[roomId]) {
+            roomsData[roomId] = {
+                playlist: [],
+                users: {}
+            };
         }
-        if (rooms[roomId].currentAudio) {
-            socket.emit('user-changed-audio', { audioUrl: rooms[roomId].currentAudio });
+
+        // Ajouter l'utilisateur
+        roomsData[roomId].users[socket.id] = user;
+
+        console.log(`[Salon ${roomId}] ${user} a rejoint.`);
+
+        // 1. Envoyer la liste mise à jour de tous les utilisateurs du salon
+        io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
+
+        // 2. Lui envoyer l'état actuel de la playlist du salon
+        socket.emit('update-playlist', roomsData[roomId].playlist);
+
+        // 3. Notifier le chat du salon
+        io.to(roomId).emit('chat-message', {
+            username: 'Système',
+            message: `${user} a rejoint le salon.`,
+            isSystem: true
+        });
+    });
+
+    // Gestion du Chat
+    socket.on('send-chat-message', ({ message }) => {
+        const roomId = socket.roomId;
+        if (roomId && message && message.trim() !== '') {
+            io.to(roomId).emit('chat-message', {
+                username: socket.username || 'Anonyme',
+                message: message.trim(),
+                isSystem: false
+            });
         }
     });
 
-    // Gestion du changement de vidéo
-    socket.on('change-video', ({ roomId, videoUrl }) => {
-        if (rooms[roomId]) rooms[roomId].currentVideo = videoUrl;
-        socket.to(roomId).emit('user-changed-video', { videoUrl });
-    });
-
-    // Gestion du changement de musique
-    socket.on('change-audio', ({ roomId, audioUrl }) => {
-        if (rooms[roomId]) rooms[roomId].currentAudio = audioUrl;
-        socket.to(roomId).emit('user-changed-audio', { audioUrl });
-    });
-
-    // Synchronisation universelle des actions (Play, Pause, Seek) pour Vidéo
-    socket.on('video-action', ({ roomId, action, currentTime }) => {
-        if (rooms[roomId]) {
-            rooms[roomId].isPlaying = (action === 'play');
+    // Contrôle Vidéo (Play/Pause/Seek)
+    socket.on('video-action', (data) => {
+        if (socket.roomId) {
+            socket.to(socket.roomId).emit('user-video-action', data);
         }
-        socket.to(roomId).emit('user-video-action', { action, currentTime });
     });
 
-    // Synchronisation universelle des actions (Play, Pause, Seek) pour Musique
-    socket.on('audio-action', ({ roomId, action, currentTime }) => {
-        if (rooms[roomId]) {
-            rooms[roomId].isAudioPlaying = (action === 'play');
+    // Changement immédiat de vidéo
+    socket.on('change-video', (data) => {
+        if (socket.roomId) {
+            socket.to(socket.roomId).emit('user-changed-video', data);
         }
-        socket.to(roomId).emit('user-audio-action', { action, currentTime });
     });
 
+    // Gestion de la Playlist (Ajout à la file)
+    socket.on('add-to-playlist', ({ videoUrl }) => {
+        const roomId = socket.roomId;
+        if (roomId && videoUrl) {
+            // Extraction rapide d'un titre lisible
+            let title = "Vidéo externe";
+            if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+                title = "Vidéo YouTube";
+            } else {
+                title = videoUrl.split('/').pop().split('?')[0] || "Lien Vidéo";
+            }
+
+            const newItem = { id: Math.random().toString(36).substring(2, 7), url: videoUrl, title };
+            roomsData[roomId].playlist.push(newItem);
+
+            io.to(roomId).emit('update-playlist', roomsData[roomId].playlist);
+            
+            io.to(roomId).emit('chat-message', {
+                username: 'Système',
+                message: `Une vidéo a été ajoutée à la file d'attente.`,
+                isSystem: true
+            });
+        }
+    });
+
+    // Retirer ou passer à la vidéo suivante dans la playlist
+    socket.on('remove-from-playlist', ({ itemId }) => {
+        const roomId = socket.roomId;
+        if (roomId && roomsData[roomId]) {
+            roomsData[roomId].playlist = roomsData[roomId].playlist.filter(item => item.id !== itemId);
+            io.to(roomId).emit('update-playlist', roomsData[roomId].playlist);
+        }
+    });
+
+    // Déconnexion
     socket.on('disconnect', () => {
-        for (const roomId in rooms) {
-            rooms[roomId].users = rooms[roomId].users.filter(user => user.id !== socket.id);
-            if (rooms[roomId].users.length === 0) {
-                delete rooms[roomId];
+        const roomId = socket.roomId;
+        if (roomId && roomsData[roomId]) {
+            const userLeaving = roomsData[roomId].users[socket.id];
+            delete roomsData[roomId].users[socket.id];
+
+            // Mettre à jour les clients restants
+            io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
+
+            if (userLeaving) {
+                io.to(roomId).emit('chat-message', {
+                    username: 'Système',
+                    message: `${userLeaving} a quitté le salon.`,
+                    isSystem: true
+                });
+            }
+
+            // Nettoyer la mémoire si le salon est totalement vide
+            if (Object.keys(roomsData[roomId].users).length === 0) {
+                delete roomsData[roomId];
+                console.log(`[Salon ${roomId}] Salon vide supprimé de la mémoire.`);
             }
         }
+        console.log(`[Déconnecté] L'utilisateur a quitté : ${socket.id}`);
     });
 });
 
-http.listen(PORT, () => {
-    console.log(`Serveur StreamHub actif sur le port ${PORT}`);
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(` Serveur StreamHub actif sur le port ${PORT}`);
 });
