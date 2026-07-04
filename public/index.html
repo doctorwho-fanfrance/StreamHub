@@ -50,7 +50,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* ÉCRAN D'ACCUEIL (Masqué quand connecté) */
         #auth-screen {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -62,7 +61,6 @@
             #auth-screen { grid-template-columns: 1fr; }
         }
 
-        /* INTERFACE DU SALON (Masquée au début) */
         #room-screen {
             display: none;
         }
@@ -143,7 +141,6 @@
         .btn-block { width: 100%; }
         .btn-secondary { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); }
 
-        /* MULTIMEDIA WRAPPERS */
         .media-container {
             position: relative;
             width: 100%;
@@ -160,7 +157,6 @@
             border: none;
         }
 
-        /* Lecteur Musique Épuré */
         .audio-player-wrapper {
             display: flex;
             align-items: center;
@@ -184,7 +180,6 @@
             <p>Salons privés synchronisés pour vidéos, streams et musique.</p>
         </header>
         
-        <!-- ÉCRAN D'ACCUEIL (CREATION / REJOINDRE) -->
         <div id="auth-screen">
             <div class="card">
                 <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Lancer une session</h3>
@@ -204,13 +199,11 @@
             </div>
         </div>
 
-        <!-- ESPACE SALON ACTIF (Invisible par défaut) -->
         <div id="room-screen">
             <div class="room-status" id="room-display-id">
                 Connecté au salon : Aucun
             </div>
 
-            <!-- Lecteur Vidéo Principal (Fichiers, YouTube, Twitch) -->
             <div class="card">
                 <h3><i class="fa-solid fa-play-pause"></i> Lecteur Vidéo Synchro</h3>
                 <div class="input-group">
@@ -219,12 +212,10 @@
                 </div>
                 
                 <div class="media-container" id="media-box">
-                    <!-- Le lecteur HTML5 standard par défaut -->
                     <video id="video-player" controls></video>
                 </div>
             </div>
 
-            <!-- Espace Lecteur de Musique / Audio -->
             <div class="card">
                 <h3><i class="fa-solid fa-music music-icon"></i> Espace Musique & Audio</h3>
                 <div class="input-group">
@@ -242,21 +233,17 @@
     <script>
         const socket = io();
 
-        // Éléments d'écrans
         const authScreen = document.getElementById('auth-screen');
         const roomScreen = document.getElementById('room-screen');
         const roomDisplayId = document.getElementById('room-display-id');
 
-        // Boutons et Inputs
         const btnCreateRoom = document.getElementById('create-room-btn');
         const roomInput = document.getElementById('room-input');
         const btnJoinRoom = document.getElementById('join-room-btn');
-        const videoPlayer = document.getElementById('video-player');
         const videoUrlInput = document.getElementById('video-url-input');
         const btnLoadVideo = document.getElementById('load-video-btn');
         const mediaBox = document.getElementById('media-box');
 
-        // Musique
         const audioPlayer = document.getElementById('audio-player');
         const audioUrlInput = document.getElementById('audio-url-input');
         const btnLoadAudio = document.getElementById('load-audio-btn');
@@ -264,7 +251,6 @@
         let currentRoomId = null;
         let isSyncing = false;
 
-        // Gestion automatique du rafraîchissement (F5)
         const urlParams = new URLSearchParams(window.location.search);
         const roomIdFromUrl = urlParams.get('room');
         if (roomIdFromUrl) {
@@ -290,13 +276,11 @@
             window.history.pushState({}, '', `?room=${roomId}`);
             socket.emit('join-room', { roomId, username: 'Utilisateur' });
             
-            // BASCULE DES ÉCRANS : On masque l'accueil et on affiche le salon !
             authScreen.style.display = 'none';
             roomScreen.style.display = 'block';
-            roomDisplayId.innerHTML = `<i class="fa-solid fa-circle-check"></i> Salon Privé Actif : <strong>${roomId}</strong> | Partagez ce lien URL à vos amis !`;
+            roomDisplayId.innerHTML = `<i class="fa-solid fa-circle-check"></i> Salon Privé Actif : <strong>${roomId}</strong> | Partagez l'URL complète à vos amis !`;
         }
 
-        // --- ENVOI ET FORMATAGE DES LIENS VIDÉO (YouTube / Twitch / Direct) ---
         if (btnLoadVideo) {
             btnLoadVideo.addEventListener('click', () => {
                 const url = videoUrlInput.value.trim();
@@ -308,53 +292,78 @@
         }
 
         function loadMediaSource(url) {
-            // Détection YouTube
             if (url.includes('youtube.com') || url.includes('youtu.be')) {
                 let videoId = '';
                 if(url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split(/[?#]/)[0];
                 else if(url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
-                
                 mediaBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
             } 
-            // Détection Twitch
             else if (url.includes('twitch.tv')) {
                 let channelName = url.split('twitch.tv/')[1].split(/[?#]/)[0];
                 mediaBox.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${channelName}&parent=${window.location.hostname}&autoplay=true" allowfullscreen></iframe>`;
             } 
-            // Fichier direct (MP4...)
             else {
                 mediaBox.innerHTML = `<video id="video-player" controls autoplay src="${url}"></video>`;
-                bindVideoEvents(); // Ré-attache les écouteurs de synchro sur la nouvelle balise vidéo
+                setTimeout(bindVideoEvents, 100); 
             }
         }
 
         function bindVideoEvents() {
             const vp = document.getElementById('video-player');
             if(!vp) return;
-            vp.addEventListener('play', () => { if (!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: vp.currentTime }); });
-            vp.addEventListener('pause', () => { if (!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: vp.currentTime }); });
-            vp.addEventListener('seeked', () => { if (!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'seek', currentTime: vp.currentTime }); });
+            
+            // Suppression des anciens écouteurs pour éviter les doublons
+            vp.removeAttribute('onplay');
+            vp.removeAttribute('onpause');
+            vp.removeAttribute('onseeked');
+
+            vp.addEventListener('play', () => { 
+                if (!isSyncing && currentRoomId) {
+                    socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: vp.currentTime }); 
+                }
+            });
+            vp.addEventListener('pause', () => { 
+                if (!isSyncing && currentRoomId) {
+                    socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: vp.currentTime }); 
+                }
+            });
+            vp.addEventListener('seeked', () => { 
+                if (!isSyncing && currentRoomId) {
+                    socket.emit('video-action', { roomId: currentRoomId, action: 'seek', currentTime: vp.currentTime }); 
+                }
+            });
         }
         bindVideoEvents();
 
-        // --- LOGIQUE MUSIQUE / AUDIO ---
+        // --- MUSIQUE ---
         if (btnLoadAudio) {
             btnLoadAudio.addEventListener('click', () => {
                 const url = audioUrlInput.value.trim();
                 if (url && currentRoomId) {
                     audioPlayer.src = url;
                     audioPlayer.play();
-                    socket.emit('change-audio', { roomId: currentRoomId, audioUrl: url }); // Note: ton serveur accepte les sockets génériques
+                    socket.emit('change-audio', { roomId: currentRoomId, audioUrl: url });
                 }
             });
         }
-        audioPlayer.addEventListener('play', () => { if(!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'audio-play', currentTime: audioPlayer.currentTime }); });
-        audioPlayer.addEventListener('pause', () => { if(!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'audio-pause', currentTime: audioPlayer.currentTime }); });
+        audioPlayer.addEventListener('play', () => { 
+            if(!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'audio-play', currentTime: audioPlayer.currentTime }); 
+        });
+        audioPlayer.addEventListener('pause', () => { 
+            if(!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'audio-pause', currentTime: audioPlayer.currentTime }); 
+        });
 
-        // --- RÉCEPTION DES ÉVÉNEMENTS SOCKET ---
+        // --- SOCKETS ---
         socket.on('user-changed-video', ({ videoUrl }) => {
             isSyncing = true;
             loadMediaSource(videoUrl);
+            isSyncing = false;
+        });
+
+        socket.on('user-changed-audio', ({ audioUrl }) => {
+            isSyncing = true;
+            audioPlayer.src = audioUrl;
+            audioPlayer.play();
             isSyncing = false;
         });
 
@@ -362,13 +371,11 @@
             isSyncing = true;
             const vp = document.getElementById('video-player');
             
-            // Actions Vidéo Locale
             if (vp && ['play', 'pause', 'seek'].includes(action)) {
                 vp.currentTime = currentTime;
                 if (action === 'play') vp.play();
                 else if (action === 'pause') vp.pause();
             }
-            // Actions Audio
             if (action === 'audio-play') { audioPlayer.currentTime = currentTime; audioPlayer.play(); }
             if (action === 'audio-pause') { audioPlayer.pause(); }
             
