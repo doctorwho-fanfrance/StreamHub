@@ -31,294 +31,100 @@
             box-sizing: border-box;
         }
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
+        .container { width: 100%; max-width: 1300px; }
+        header { text-align: center; margin-bottom: 30px; }
         header h1 {
-            font-size: 2.8rem;
-            font-weight: 800;
-            margin: 0 0 5px 0;
+            font-size: 2.8rem; font-weight: 800; margin: 0;
             background: linear-gradient(45deg, #ff007f, #8a2be2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
-        #auth-screen {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        @media (max-width: 768px) {
-            #auth-screen { grid-template-columns: 1fr; }
+        #auth-screen { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }
+        #room-screen { display: none; }
+        @media (max-width: 992px) {
             #room-layout { grid-template-columns: 1fr !important; }
-        }
-
-        #room-screen {
-            display: none;
+            #auth-screen { grid-template-columns: 1fr; }
         }
 
         .room-status {
-            background: rgba(138, 43, 226, 0.15);
-            border: 1px solid var(--accent-primary);
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 20px;
-            font-weight: 600;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
+            background: rgba(138, 43, 226, 0.15); border: 1px solid var(--accent-primary);
+            padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 20px; font-weight: 600;
         }
 
-        #room-layout {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 20px;
-            align-items: start;
-        }
-
+        #room-layout { display: grid; grid-template-columns: 1fr 400px; gap: 20px; align-items: start; }
+        
         .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            padding: 22px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            margin-bottom: 20px;
+            background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.07); padding: 22px; border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); margin-bottom: 20px;
         }
-
-        .card h3 {
-            margin: 0 0 10px 0;
-            font-size: 1.15rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
+        .card h3 { margin: 0 0 10px 0; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; }
         .card h3 i { color: #ff007f; }
-
-        .hint {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-            display: block;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
+        .hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; display: block; }
+        
+        .input-group { display: flex; gap: 8px; margin-bottom: 12px; }
         input {
-            flex: 1;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: #fff;
-            outline: none;
-            font-size: 0.9rem;
+            flex: 1; padding: 10px 14px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; outline: none;
         }
-
-        input:focus { border-color: var(--accent-primary); }
 
         button {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
+            padding: 10px 20px; background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;
         }
-
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--glow);
-        }
-
+        button:hover { transform: translateY(-1px); box-shadow: var(--glow); }
         .btn-block { width: 100%; }
         .btn-secondary { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); }
         .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
         .btn-danger { background: linear-gradient(135deg, #ff0055 0%, #990033 100%); }
+        .btn-webrtc { background: #00f2fe; color: #000; font-weight: 700; margin-bottom: 10px; }
 
+        /* VIOÉO LECTEUR */
         .media-container {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            margin-top: 10px;
+            position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
+            border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); margin-top: 10px;
         }
-
-        video, iframe, #yt-player-placeholder {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
+        video, iframe, #yt-player-placeholder { width: 100%; height: 100%; border: none; display: block; }
 
         .volume-control {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 12px;
-            background: rgba(255, 255, 255, 0.04);
-            padding: 6px 14px;
-            border-radius: 8px;
-            width: fit-content;
+            display: flex; align-items: center; gap: 12px; margin-top: 12px;
+            background: rgba(255, 255, 255, 0.04); padding: 6px 14px; border-radius: 8px; width: fit-content;
+        }
+        .volume-slider { -webkit-appearance: none; width: 110px; height: 4px; background: rgba(255, 255, 255, 0.2); outline: none; }
+        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-primary); }
+
+        /* --- DESIGN GRILLE DES CAMÉRAS (WEBRTC) --- */
+        .video-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 12px;
+        }
+        .video-wrapper {
+            position: relative; aspect-ratio: 4 / 3; background: #1a1a2e; border-radius: 8px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
+        .video-wrapper .name-label {
+            position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.6);
+            padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: #fff; max-width: 80%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .volume-slider {
-            -webkit-appearance: none;
-            width: 110px;
-            height: 4px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.2);
-            outline: none;
-            cursor: pointer;
-        }
-
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-        }
-
-        /* Users & Chat */
-        .users-badge {
-            background: #00f2fe;
-            color: #000;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 800;
-        }
-
-        .user-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 15px;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            max-height: 70px;
-            overflow-y: auto;
-        }
-
-        .user-tag {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .chat-box {
-            height: 250px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 10px;
-            padding: 12px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .chat-msg {
-            font-size: 0.85rem;
-            line-height: 1.3;
-            word-break: break-word;
-        }
-        .chat-msg .name {
-            font-weight: 700;
-            margin-right: 5px;
-        }
-        .chat-msg.system {
-            color: var(--text-muted);
-            font-style: italic;
-            text-align: center;
-            font-size: 0.8rem;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 3px;
-            border-radius: 4px;
-        }
-
-        /* Playlist */
-        .playlist-box {
-            max-height: 230px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 10px;
-        }
-
-        .playlist-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255, 255, 255, 0.04);
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            border-left: 3px solid var(--accent-primary);
-        }
-
-        .playlist-item .title-text {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 190px;
-        }
-
-        .playlist-actions {
-            display: flex;
-            gap: 4px;
-        }
-
-        .playlist-item button {
-            padding: 5px 8px;
-            font-size: 0.75rem;
-            border-radius: 6px;
-        }
-
-        .empty-playlist {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-style: italic;
-            text-align: center;
-            padding: 10px;
-        }
+        /* Users & Chat & Playlist */
+        .users-badge { background: #00f2fe; color: #000; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; }
+        .user-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; padding: 8px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; max-height: 60px; overflow-y: auto; }
+        .user-tag { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; }
+        .chat-box { height: 200px; background: rgba(0, 0, 0, 0.25); border-radius: 10px; padding: 12px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .chat-msg { font-size: 0.85rem; }
+        .chat-msg .name { font-weight: 700; margin-right: 5px; }
+        .chat-msg.system { color: var(--text-muted); font-style: italic; text-align: center; font-size: 0.8rem; }
+        
+        .playlist-box { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+        .playlist-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.04); padding: 6px 10px; border-radius: 8px; font-size: 0.85rem; border-left: 3px solid var(--accent-primary); }
+        .playlist-item .title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        .playlist-actions { display: flex; gap: 4px; }
+        .playlist-item button { padding: 5px 8px; font-size: 0.75rem; border-radius: 6px; }
+        .empty-playlist { color: var(--text-muted); font-size: 0.85rem; font-style: italic; text-align: center; padding: 10px; }
     </style>
 </head>
 <body>
@@ -326,7 +132,7 @@
     <div class="container">
         <header>
             <h1>StreamHub</h1>
-            <p>Salons synchronisés en temps réel.</p>
+            <p>Salons de streaming collaboratifs avec Visio.</p>
         </header>
         
         <div id="auth-screen">
@@ -351,13 +157,13 @@
             <div class="room-status" id="room-display-id">Connecté</div>
 
             <div id="room-layout">
+                <!-- GAUCHE : LECTEUR VIDÉO -->
                 <div class="left-col">
                     <div class="card">
                         <h3><i class="fa-solid fa-play-pause"></i> Lecteur Vidéo Synchro</h3>
-                        <span class="hint"><i class="fa-brands fa-youtube"></i> YouTube Live Synchro | <i class="fa-solid fa-file-video"></i> Fichier MP4</span>
                         <div class="input-group">
                             <input type="text" id="video-url-input" placeholder="Lien MP4 ou URL YouTube...">
-                            <button id="load-video-btn">Charger immédiatement</button>
+                            <button id="load-video-btn">Charger</button>
                         </div>
                         <div class="media-container" id="media-box">
                             <video id="video-player" controls></video>
@@ -369,30 +175,37 @@
                     </div>
                 </div>
 
+                <!-- DROITE : WEBRTC, CHAT, PLAYLIST -->
                 <div class="right-col">
+                    <!-- ZONE VISIO (AMÉLIORATION 5) -->
                     <div class="card">
-                        <h3>
-                            <i class="fa-solid fa-comments"></i> Salon & Chat 
-                            <span class="users-badge" id="user-count">0</span>
-                        </h3>
-                        
+                        <h3><i class="fa-solid fa-video"></i> Caméras en direct</h3>
+                        <button id="toggle-cam-btn" class="btn-block btn-webrtc"><i class="fa-solid fa-camera"></i> Activer ma Caméra/Micro</button>
+                        <div class="video-grid" id="video-grid">
+                            <!-- Les caméras s'insèrent ici -->
+                        </div>
+                    </div>
+
+                    <!-- CHAT -->
+                    <div class="card">
+                        <h3><i class="fa-solid fa-comments"></i> Chat <span class="users-badge" id="user-count">0</span></h3>
                         <div class="user-list" id="users-container"></div>
                         <div class="chat-box" id="chat-messages"></div>
-                        
                         <div class="input-group">
-                            <input type="text" id="chat-input" placeholder="Écrire un message...">
+                            <input type="text" id="chat-input" placeholder="Écrire...">
                             <button id="send-chat-btn"><i class="fa-solid fa-paper-plane"></i></button>
                         </div>
                     </div>
 
+                    <!-- PLAYLIST -->
                     <div class="card">
-                        <h3><i class="fa-solid fa-list-ol"></i> File d'attente</h3>
+                        <h3><i class="fa-solid fa-list-ol"></i> File</h3>
                         <div class="input-group">
-                            <input type="text" id="playlist-url-input" placeholder="Lien à ajouter à la suite...">
+                            <input type="text" id="playlist-url-input" placeholder="Lien à la suite...">
                             <button id="add-playlist-btn" class="btn-secondary">+</button>
                         </div>
                         <div class="playlist-box" id="playlist-container">
-                            <div class="empty-playlist">Aucune vidéo en attente</div>
+                            <div class="empty-playlist">Aucune vidéo</div>
                         </div>
                     </div>
                 </div>
@@ -405,6 +218,7 @@
     <script>
         const socket = io();
         
+        // Dom Elements
         const authScreen = document.getElementById('auth-screen');
         const roomScreen = document.getElementById('room-screen');
         const roomDisplayId = document.getElementById('room-display-id');
@@ -416,7 +230,6 @@
         const btnLoadVideo = document.getElementById('load-video-btn');
         const mediaBox = document.getElementById('media-box');
         const videoVolumeSlider = document.getElementById('video-volume');
-        
         const userCount = document.getElementById('user-count');
         const usersContainer = document.getElementById('users-container');
         const chatMessages = document.getElementById('chat-messages');
@@ -425,11 +238,20 @@
         const playlistUrlInput = document.getElementById('playlist-url-input');
         const btnAddPlaylist = document.getElementById('add-playlist-btn');
         const playlistContainer = document.getElementById('playlist-container');
+        
+        // Dom Elements WebRTC
+        const btnToggleCam = document.getElementById('toggle-cam-btn');
+        const videoGrid = document.getElementById('video-grid');
 
         let currentRoomId = null;
         let isSyncing = false;
         let ytPlayer = null;
         let ytLastState = -1;
+        
+        // Variables WebRTC
+        let localStream = null;
+        let peerConnections = {}; // Stocke les connexions avec chaque utilisateur { socketId: RTCPeerConnection }
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }; // Serveur STUN gratuit de Google
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('room')) initializeRoom(urlParams.get('room'));
@@ -444,9 +266,145 @@
             socket.emit('join-room', { roomId, username: pseudo });
             authScreen.style.display = 'none';
             roomScreen.style.display = 'block';
-            roomDisplayId.innerHTML = `<i class="fa-solid fa-circle-check"></i> Salon : <strong>${roomId}</strong>`;
+            roomDisplayId.innerHTML = `Salon : <strong>${roomId}</strong>`;
         }
 
+        // --- CORE WEBRTC : GESTION CAMÉRA & INTERCONNEXIONS ---
+        btnToggleCam.addEventListener('click', async () => {
+            if (localStream) {
+                // Éteindre la caméra
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+                const localBox = document.getElementById('local-video-box');
+                if (localBox) localBox.remove();
+                btnToggleCam.innerHTML = `<i class="fa-solid fa-camera"></i> Activer ma Caméra/Micro`;
+                btnToggleCam.classList.remove('btn-danger');
+                btnToggleCam.classList.add('btn-webrtc');
+                // Fermer toutes les connexions existantes
+                Object.keys(peerConnections).forEach(id => {
+                    peerConnections[id].close();
+                    delete peerConnections[id];
+                    const remoteBox = document.getElementById(`video-${id}`);
+                    if (remoteBox) remoteBox.remove();
+                });
+            } else {
+                // Allumer la caméra
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    createVideoWrapper('local-video-box', 'Moi (Vous)', localStream, true);
+                    btnToggleCam.innerHTML = `<i class="fa-solid fa-video-slash"></i> Couper ma Caméra`;
+                    btnToggleCam.classList.remove('btn-webrtc');
+                    btnToggleCam.classList.add('btn-danger');
+
+                    // Lancer un appel vers tous ceux déjà présents
+                    socket.emit('request-peers-trigger'); 
+                } catch (err) {
+                    alert("Impossible d'accéder à la caméra ou au micro. Vérifiez les autorisations.");
+                    console.error(err);
+                }
+            }
+        });
+
+        function createVideoWrapper(id, name, stream, isMuted = false) {
+            let wrapper = document.getElementById(id);
+            if (!wrapper) {
+                wrapper = document.createElement('div');
+                wrapper.id = id;
+                wrapper.className = 'video-wrapper';
+                const videoEl = document.createElement('video');
+                videoEl.autoplay = true;
+                videoEl.playsInline = true;
+                videoEl.muted = isMuted;
+                videoEl.srcObject = stream;
+                
+                const label = document.createElement('div');
+                label.className = 'name-label';
+                label.innerText = name;
+
+                wrapper.appendChild(videoEl);
+                wrapper.appendChild(label);
+                videoGrid.appendChild(wrapper);
+            }
+        }
+
+        // Initialiser la connexion peer-to-peer WebRTC
+        function initPeerConnection(userId, username, initiateCall = false) {
+            if (peerConnections[userId]) return peerConnections[userId];
+
+            const pc = new RTCPeerConnection(rtcConfig);
+            peerConnections[userId] = pc;
+
+            // Ajouter notre flux caméra à la connexion
+            if (localStream) {
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            }
+
+            // Quand on reçoit le flux vidéo de l'autre
+            pc.ontrack = (event) => {
+                createVideoWrapper(`video-${userId}`, username, event.streams[0], false);
+            };
+
+            // Quand on génère un candidat ICE, on l'envoie via le serveur
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('new-ice-candidate', { candidate: event.candidate, to: userId });
+                }
+            };
+
+            // Si c'est nous qui initions l'appel (le nouvel arrivant qui a sa cam allumée)
+            if (initiateCall && localStream) {
+                pc.createOffer()
+                    .then(offer => pc.setLocalDescription(offer))
+                    .then(() => {
+                        socket.emit('video-offer', { sdp: pc.localDescription, to: userId });
+                    });
+            }
+
+            return pc;
+        }
+
+        // --- ÉCOUTEURS SOCKETS WEBRTC ---
+        socket.on('user-joined-webrtc', ({ id, username }) => {
+            // Si notre caméra est active, on initie la connexion avec le nouvel arrivant
+            if (localStream) {
+                initPeerConnection(id, username, true);
+            }
+        });
+
+        socket.on('video-offer', async ({ sdp, from }) => {
+            // Si on reçoit une offre et qu'on n'a pas encore allumé notre cam, on peut quand même recevoir le flux
+            const pc = initPeerConnection(from, 'Ami', false);
+            await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            socket.emit('video-answer', { sdp: pc.localDescription, to: from });
+        });
+
+        socket.on('video-answer', async ({ sdp, from }) => {
+            const pc = peerConnections[from];
+            if (pc) {
+                await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+            }
+        });
+
+        socket.on('new-ice-candidate', async ({ candidate, from }) => {
+            const pc = peerConnections[from];
+            if (pc) {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+        });
+
+        socket.on('user-left-webrtc', ({ id }) => {
+            if (peerConnections[id]) {
+                peerConnections[id].close();
+                delete peerConnections[id];
+            }
+            const el = document.getElementById(`video-${id}`);
+            if (el) el.remove();
+        });
+
+
+        // --- LOGIQUE VIDÉO CLASSIQUE & SYNCHRO ---
         videoVolumeSlider.addEventListener('input', (e) => {
             const vp = document.getElementById('video-player');
             if (vp) vp.volume = e.target.value / 100;
@@ -456,13 +414,10 @@
         if (btnLoadVideo) {
             btnLoadVideo.addEventListener('click', () => {
                 const url = videoUrlInput.value.trim();
-                if (url && currentRoomId) {
-                    forcePlayVideo(url);
-                }
+                if (url && currentRoomId) forcePlayVideo(url);
             });
         }
 
-        // Fonction centrale pour forcer la lecture d'un lien (local ou playlist)
         function forcePlayVideo(url) {
             loadMediaSource(url);
             socket.emit('change-video', { roomId: currentRoomId, videoUrl: url });
@@ -499,7 +454,6 @@
             }
         }
 
-        // Fonction déclenchée par le bouton "Lancer" de la file d'attente
         function launchFromPlaylist(url, id) {
             forcePlayVideo(url);
             socket.emit('remove-from-playlist', { itemId: id });
@@ -507,25 +461,17 @@
 
         function sendChatMessage() {
             const msg = chatInput.value.trim();
-            if (msg) {
-                socket.emit('send-chat-message', { message: msg });
-                chatInput.value = '';
-            }
+            if (msg) { socket.emit('send-chat-message', { message: msg }); chatInput.value = ''; }
         }
         btnSendChat.addEventListener('click', sendChatMessage);
         chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
 
         btnAddPlaylist.addEventListener('click', () => {
             const url = playlistUrlInput.value.trim();
-            if (url) {
-                socket.emit('add-to-playlist', { videoUrl: url });
-                playlistUrlInput.value = '';
-            }
+            if (url) { socket.emit('add-to-playlist', { videoUrl: url }); playlistUrlInput.value = ''; }
         });
 
-        // RECEPTION SOCKETS
-
-        // Les tags utilisateurs se parent de leur couleur respective
+        // RECEPTIONS CLASSIQUES
         socket.on('update-users', (usersList) => {
             userCount.innerText = usersList.length;
             usersContainer.innerHTML = '';
@@ -534,7 +480,6 @@
             });
         });
 
-        // Les messages s'affichent avec la couleur unique de l'émetteur
         socket.on('chat-message', ({ username, message, color, isSystem }) => {
             if (isSystem) {
                 chatMessages.innerHTML += `<div class="chat-msg system">${message}</div>`;
@@ -544,7 +489,6 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
-        // Rendu de la file d'attente avec bouton Lancer Synchro + bouton Supprimer
         socket.on('update-playlist', (playlist) => {
             playlistContainer.innerHTML = '';
             if (playlist.length === 0) {
@@ -556,8 +500,8 @@
                     <div class="playlist-item">
                         <span class="title-text"><strong>#${index+1}</strong> ${item.title}</span>
                         <div class="playlist-actions">
-                            <button class="btn-success" onclick="launchFromPlaylist('${item.url}', '${item.id}')" title="Lancer pour tout le monde"><i class="fa-solid fa-play"></i></button>
-                            <button class="btn-danger" onclick="socket.emit('remove-from-playlist', { itemId: '${item.id}' })" title="Supprimer de la file"><i class="fa-solid fa-trash"></i></button>
+                            <button class="btn-success" onclick="launchFromPlaylist('${item.url}', '${item.id}')"><i class="fa-solid fa-play"></i></button>
+                            <button class="btn-danger" onclick="socket.emit('remove-from-playlist', { itemId: '${item.id}' })"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 `;

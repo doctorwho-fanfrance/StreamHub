@@ -9,50 +9,36 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Stockage en mémoire de l'état des salons
 const roomsData = {};
-
-// Liste de couleurs sympas et bien visibles sur fond sombre
-const CHAT_COLORS = [
-    '#ff007f', '#00f2fe', '#4facfe', '#00ff87', 
-    '#f9d423', '#ff4e50', '#e100ff', '#00ffcc',
-    '#ff9900', '#ff5e62', '#38ef7d', '#b3ebe6'
-];
+const CHAT_COLORS = ['#ff007f', '#00f2fe', '#4facfe', '#00ff87', '#f9d423', '#ff4e50', '#e100ff', '#00ffcc'];
 
 io.on('connection', (socket) => {
-    console.log(`[Connecté] Un utilisateur s'est connecté : ${socket.id}`);
+    console.log(`[Connecté] : ${socket.id}`);
 
     socket.on('join-room', ({ roomId, username }) => {
         socket.join(roomId);
         socket.roomId = roomId;
-        
         const user = username ? username.trim() : 'Anonyme';
         socket.username = user;
-
-        // Choix d'une couleur aléatoire pour cet utilisateur
         socket.userColor = CHAT_COLORS[Math.floor(Math.random() * CHAT_COLORS.length)];
 
         if (!roomsData[roomId]) {
-            roomsData[roomId] = {
-                playlist: [],
-                users: {} // socketId: { username, color }
-            };
+            roomsData[roomId] = { playlist: [], users: {} };
         }
 
+        // On stocke aussi l'ID du socket pour la logique WebRTC
         roomsData[roomId].users[socket.id] = {
+            id: socket.id,
             username: user,
             color: socket.userColor
         };
 
-        console.log(`[Salon ${roomId}] ${user} a rejoint.`);
+        // Informer les anciens qu'un nouveau est là pour initier le WebRTC
+        socket.to(roomId).emit('user-joined-webrtc', { id: socket.id, username: user });
 
-        // Envoyer la liste mise à jour des utilisateurs (avec leurs couleurs)
         io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
-
-        // Envoyer la playlist actuelle
         socket.emit('update-playlist', roomsData[roomId].playlist);
-
-        // Message système
+        
         io.to(roomId).emit('chat-message', {
             username: 'Système',
             message: `${user} a rejoint le salon.`,
@@ -61,44 +47,46 @@ io.on('connection', (socket) => {
         });
     });
 
-    // Envoi de message avec couleur persistante
+    // --- LOGIQUE SIGNALING WEBRTC (LES INTERNES DE L'APPEL) ---
+    socket.on('video-offer', ({ sdp, to }) => {
+        socket.to(to).emit('video-offer', { sdp, from: socket.id });
+    });
+
+    socket.on('video-answer', ({ sdp, to }) => {
+        socket.to(to).emit('video-answer', { sdp, from: socket.id });
+    });
+
+    socket.on('new-ice-candidate', ({ candidate, to }) => {
+        socket.to(to).emit('new-ice-candidate', { candidate, from: socket.id });
+    });
+    // ---------------------------------------------------------
+
     socket.on('send-chat-message', ({ message }) => {
         const roomId = socket.roomId;
-        if (roomId && message && message.trim() !== '') {
+        if (roomId && message?.trim()) {
             io.to(roomId).emit('chat-message', {
-                username: socket.username || 'Anonyme',
+                username: socket.username,
                 message: message.trim(),
-                color: socket.userColor || '#ffffff',
+                color: socket.userColor,
                 isSystem: false
             });
         }
     });
 
     socket.on('video-action', (data) => {
-        if (socket.roomId) {
-            socket.to(socket.roomId).emit('user-video-action', data);
-        }
+        if (socket.roomId) socket.to(socket.roomId).emit('user-video-action', data);
     });
 
     socket.on('change-video', (data) => {
-        if (socket.roomId) {
-            socket.to(socket.roomId).emit('user-changed-video', data);
-        }
+        if (socket.roomId) socket.to(socket.roomId).emit('user-changed-video', data);
     });
 
     socket.on('add-to-playlist', ({ videoUrl }) => {
         const roomId = socket.roomId;
         if (roomId && videoUrl) {
-            let title = "Vidéo externe";
-            if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-                title = "Vidéo YouTube";
-            } else {
-                title = videoUrl.split('/').pop().split('?')[0] || "Lien Vidéo";
-            }
-
+            let title = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') ? "Vidéo YouTube" : (videoUrl.split('/').pop().split('?')[0] || "Lien Vidéo");
             const newItem = { id: Math.random().toString(36).substring(2, 7), url: videoUrl, title };
             roomsData[roomId].playlist.push(newItem);
-
             io.to(roomId).emit('update-playlist', roomsData[roomId].playlist);
         }
     });
@@ -117,6 +105,9 @@ io.on('connection', (socket) => {
             const userData = roomsData[roomId].users[socket.id];
             delete roomsData[roomId].users[socket.id];
 
+            // Informer les autres de couper le flux de ce peer
+            socket.to(roomId).emit('user-left-webrtc', { id: socket.id });
+
             io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
 
             if (userData) {
@@ -128,15 +119,10 @@ io.on('connection', (socket) => {
                 });
             }
 
-            if (Object.keys(roomsData[roomId].users).length === 0) {
-                delete roomsData[roomId];
-                console.log(`[Salon ${roomId}] Salon vide supprimé.`);
-            }
+            if (Object.keys(roomsData[roomId].users).length === 0) delete roomsData[roomId];
         }
     });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(` Serveur StreamHub actif sur le port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`Serveur actif sur le port ${PORT}`));
