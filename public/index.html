@@ -78,7 +78,6 @@
         .card {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.07);
             padding: 25px;
             border-radius: 16px;
@@ -211,11 +210,12 @@
                 Connecté au salon : Aucun
             </div>
 
+            <!-- Lecteur Vidéo -->
             <div class="card">
                 <h3><i class="fa-solid fa-play-pause"></i> Lecteur Vidéo Synchro</h3>
-                <span class="hint"><i class="fa-brands fa-youtube"></i> YouTube/Twitch (Synchro au chargement) | <i class="fa-solid fa-file-video"></i> Liens directs MP4 (Synchro Live Play/Pause)</span>
+                <span class="hint"><i class="fa-brands fa-youtube"></i> YouTube/Twitch (Synchro au chargement) | <i class="fa-solid fa-file-video"></i> Liens directs / fichiers locaux (Synchro Live Play/Pause)</span>
                 <div class="input-group">
-                    <input type="text" id="video-url-input" placeholder="Lien MP4, YouTube ou Twitch...">
+                    <input type="text" id="video-url-input" placeholder="Lien MP4, vidéos/, YouTube...">
                     <button id="load-video-btn">Charger</button>
                 </div>
                 
@@ -224,11 +224,12 @@
                 </div>
             </div>
 
+            <!-- Lecteur Musique -->
             <div class="card">
                 <h3><i class="fa-solid fa-music music-icon"></i> Espace Musique & Audio</h3>
-                <span class="hint"><i class="fa-solid fa-circle-info"></i> Fonctionne avec les liens directs d'écoute (fichiers terminant en .mp3, .wav)</span>
+                <span class="hint"><i class="fa-solid fa-circle-info"></i> Supporte uniquement les fichiers audios directs libres (se terminant par .mp3, .wav, etc.)</span>
                 <div class="input-group">
-                    <input type="text" id="audio-url-input" placeholder="Lien direct vers un fichier audio (ex: https://site.com/musique.mp3)...">
+                    <input type="text" id="audio-url-input" placeholder="Lien direct vers un fichier audio .mp3...">
                     <button id="load-audio-btn">Lancer la Musique</button>
                 </div>
                 <div class="audio-player-wrapper">
@@ -258,13 +259,12 @@
         const btnLoadAudio = document.getElementById('load-audio-btn');
 
         let currentRoomId = null;
-        let isSyncing = false;
+        let isSyncing = false; // Bloque les boucles d'envoi infinies
 
+        // Vérification automatique au refresh (F5)
         const urlParams = new URLSearchParams(window.location.search);
         const roomIdFromUrl = urlParams.get('room');
-        if (roomIdFromUrl) {
-            initializeRoom(roomIdFromUrl);
-        }
+        if (roomIdFromUrl) initializeRoom(roomIdFromUrl);
 
         if (btnCreateRoom) {
             btnCreateRoom.addEventListener('click', () => {
@@ -287,9 +287,10 @@
             
             authScreen.style.display = 'none';
             roomScreen.style.display = 'block';
-            roomDisplayId.innerHTML = `<i class="fa-solid fa-circle-check"></i> Salon Privé Actif : <strong>${roomId}</strong> | Copiez l'URL de votre navigateur pour inviter vos amis !`;
+            roomDisplayId.innerHTML = `<i class="fa-solid fa-circle-check"></i> Salon Privé Actif : <strong>${roomId}</strong> | Partagez l'URL complète à vos amis !`;
         }
 
+        // --- CHARGEMENT VIDÉO ---
         if (btnLoadVideo) {
             btnLoadVideo.addEventListener('click', () => {
                 const url = videoUrlInput.value.trim();
@@ -305,7 +306,7 @@
                 let videoId = '';
                 if(url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split(/[?#]/)[0];
                 else if(url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
-                mediaBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                mediaBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
             } 
             else if (url.includes('twitch.tv')) {
                 let channelName = url.split('twitch.tv/')[1].split(/[?#]/)[0];
@@ -313,55 +314,61 @@
             } 
             else {
                 mediaBox.innerHTML = `<video id="video-player" controls autoplay src="${url}"></video>`;
-                // Correction majeure : Attendre que l'élément soit rendu avant de lier les événements
-                setTimeout(bindVideoEvents, 200); 
+                // On attend que l'élément HTML soit généré pour accrocher proprement les écouteurs de contrôle
+                setTimeout(bindVideoEvents, 150); 
             }
         }
 
+        // Liaison fixe et robuste des actions du lecteur vidéo
         function bindVideoEvents() {
             const vp = document.getElementById('video-player');
             if(!vp) return;
 
             vp.onplay = () => {
-                if (!isSyncing && currentRoomId) {
-                    socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: vp.currentTime }); 
-                }
+                if (isSyncing || !currentRoomId) return;
+                socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: vp.currentTime });
             };
+
             vp.onpause = () => {
-                if (!isSyncing && currentRoomId) {
-                    socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: vp.currentTime }); 
-                }
+                if (isSyncing || !currentRoomId) return;
+                socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: vp.currentTime });
             };
+
             vp.onseeked = () => {
-                if (!isSyncing && currentRoomId) {
-                    socket.emit('video-action', { roomId: currentRoomId, action: 'seek', currentTime: vp.currentTime }); 
-                }
+                if (isSyncing || !currentRoomId) return;
+                socket.emit('video-action', { roomId: currentRoomId, action: 'seek', currentTime: vp.currentTime });
             };
         }
+        bindVideoEvents();
 
-        // --- MUSIQUE ---
+        // --- CHARGEMENT MUSIQUE ---
         if (btnLoadAudio) {
             btnLoadAudio.addEventListener('click', () => {
                 const url = audioUrlInput.value.trim();
                 if (url && currentRoomId) {
                     audioPlayer.src = url;
-                    audioPlayer.play();
+                    audioPlayer.play().catch(()=>{});
                     socket.emit('change-audio', { roomId: currentRoomId, audioUrl: url });
                 }
             });
         }
-        
-        audioPlayer.onplay = () => { 
-            if(!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'audio-play', currentTime: audioPlayer.currentTime }); 
-        };
-        audioPlayer.onpause = () => { 
-            if(!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'audio-pause', currentTime: audioPlayer.currentTime }); 
-        };
-        audioPlayer.onseeked = () => { 
-            if(!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'audio-seek', currentTime: audioPlayer.currentTime }); 
+
+        audioPlayer.onplay = () => {
+            if (isSyncing || !currentRoomId) return;
+            socket.emit('audio-action', { roomId: currentRoomId, action: 'play', currentTime: audioPlayer.currentTime });
         };
 
-        // --- ECOUTEURS SOCKET ---
+        audioPlayer.onpause = () => {
+            if (isSyncing || !currentRoomId) return;
+            socket.emit('audio-action', { roomId: currentRoomId, action: 'pause', currentTime: audioPlayer.currentTime });
+        };
+
+        audioPlayer.onseeked = () => {
+            if (isSyncing || !currentRoomId) return;
+            socket.emit('audio-action', { roomId: currentRoomId, action: 'seek', currentTime: audioPlayer.currentTime });
+        };
+
+        // --- ECOUTEURS SOCKETS (RÉCEPTION) ---
         socket.on('user-changed-video', ({ videoUrl }) => {
             isSyncing = true;
             loadMediaSource(videoUrl);
@@ -371,36 +378,34 @@
         socket.on('user-changed-audio', ({ audioUrl }) => {
             isSyncing = true;
             audioPlayer.src = audioUrl;
-            audioPlayer.play();
+            audioPlayer.play().catch(()=>{});
             isSyncing = false;
         });
 
         socket.on('user-video-action', ({ action, currentTime }) => {
-            isSyncing = true;
             const vp = document.getElementById('video-player');
-            
-            // Actions Vidéo Directe (.mp4)
-            if (vp && ['play', 'pause', 'seek'].includes(action)) {
-                vp.currentTime = currentTime;
-                if (action === 'play') vp.play().catch(()=>{});
-                else if (action === 'pause') vp.pause();
+            if (!vp) return;
+
+            isSyncing = true;
+            vp.currentTime = currentTime;
+
+            if (action === 'play') {
+                vp.play().catch(()=>{});
+            } else if (action === 'pause') {
+                vp.pause();
             }
-            
-            // Actions Audio (.mp3)
-            if (action === 'audio-play') { audioPlayer.currentTime = currentTime; audioPlayer.play().catch(()=>{}); }
-            if (action === 'audio-pause') { audioPlayer.pause(); }
-            if (action === 'audio-seek') { audioPlayer.currentTime = currentTime; }
-            
             isSyncing = false;
         });
 
-        socket.on('sync-video', ({ videoUrl, isPlaying }) => {
+        socket.on('user-audio-action', ({ action, currentTime }) => {
             isSyncing = true;
-            loadMediaSource(videoUrl);
-            setTimeout(() => {
-                const vp = document.getElementById('video-player');
-                if (vp && isPlaying) vp.play().catch(()=>{});
-            }, 300);
+            audioPlayer.currentTime = currentTime;
+
+            if (action === 'play') {
+                audioPlayer.play().catch(()=>{});
+            } else if (action === 'pause') {
+                audioPlayer.pause();
+            }
             isSyncing = false;
         });
     </script>

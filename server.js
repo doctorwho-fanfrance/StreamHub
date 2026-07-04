@@ -17,37 +17,45 @@ io.on('connection', (socket) => {
     socket.on('join-room', ({ roomId, username }) => {
         socket.join(roomId);
         if (!rooms[roomId]) {
-            rooms[roomId] = { users: [], currentVideo: null, currentAudio: null, isPlaying: false };
+            rooms[roomId] = { users: [], currentVideo: null, currentAudio: null, isPlaying: false, isAudioPlaying: false };
         }
         rooms[roomId].users.push({ id: socket.id, username });
 
+        // Synchronisation des médias déjà actifs pour le nouvel arrivant
         if (rooms[roomId].currentVideo) {
-            socket.emit('sync-video', {
-                videoUrl: rooms[roomId].currentVideo,
-                isPlaying: rooms[roomId].isPlaying
-            });
+            socket.emit('user-changed-video', { videoUrl: rooms[roomId].currentVideo });
         }
         if (rooms[roomId].currentAudio) {
             socket.emit('user-changed-audio', { audioUrl: rooms[roomId].currentAudio });
         }
     });
 
+    // Gestion du changement de vidéo
     socket.on('change-video', ({ roomId, videoUrl }) => {
         if (rooms[roomId]) rooms[roomId].currentVideo = videoUrl;
         socket.to(roomId).emit('user-changed-video', { videoUrl });
     });
 
-    // --- PRISE EN CHARGE DE LA MUSIQUE ---
+    // Gestion du changement de musique
     socket.on('change-audio', ({ roomId, audioUrl }) => {
         if (rooms[roomId]) rooms[roomId].currentAudio = audioUrl;
         socket.to(roomId).emit('user-changed-audio', { audioUrl });
     });
 
+    // Synchronisation universelle des actions (Play, Pause, Seek) pour Vidéo
     socket.on('video-action', ({ roomId, action, currentTime }) => {
         if (rooms[roomId]) {
-            rooms[roomId].isPlaying = (action === 'play' || action === 'audio-play');
+            rooms[roomId].isPlaying = (action === 'play');
         }
         socket.to(roomId).emit('user-video-action', { action, currentTime });
+    });
+
+    // Synchronisation universelle des actions (Play, Pause, Seek) pour Musique
+    socket.on('audio-action', ({ roomId, action, currentTime }) => {
+        if (rooms[roomId]) {
+            rooms[roomId].isAudioPlaying = (action === 'play');
+        }
+        socket.to(roomId).emit('user-audio-action', { action, currentTime });
     });
 
     socket.on('disconnect', () => {
@@ -61,5 +69,5 @@ io.on('connection', (socket) => {
 });
 
 http.listen(PORT, () => {
-    console.log(`Serveur en ligne sur le port ${PORT}`);
+    console.log(`Serveur StreamHub actif sur le port ${PORT}`);
 });
