@@ -171,25 +171,17 @@
             margin-top: 15px;
             border-radius: 12px;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Styles curseurs de volume */
         .volume-control {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-top: 12px;
+            margin-top: 15px;
             background: rgba(255, 255, 255, 0.05);
             padding: 8px 16px;
             border-radius: 10px;
             width: fit-content;
-        }
-
-        .volume-control i {
-            color: var(--text-muted);
-            width: 16px;
         }
 
         .volume-slider {
@@ -209,18 +201,6 @@
             border-radius: 50%;
             background: var(--accent-primary);
             cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        .volume-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-        }
-
-        #yt-audio-wrapper {
-            width: 100%;
-            height: 60px; /* Petit bandeau discret pour la musique */
-            background: #141226;
-            display: none;
         }
     </style>
 </head>
@@ -235,153 +215,108 @@
         <div id="auth-screen">
             <div class="card">
                 <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Lancer une session</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Créez un salon privé et invitez vos amis.</p>
-                <button id="create-room-btn" class="btn-block">
-                    <i class="fa-solid fa-plus"></i> Créer un salon privé
-                </button>
+                <button id="create-room-btn" class="btn-block">Créer un salon privé</button>
             </div>
-
             <div class="card">
                 <h3><i class="fa-solid fa-right-to-bracket"></i> Rejoindre un ami</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Entrez l'identifiant pour vous synchroniser.</p>
                 <div class="input-group">
-                    <input type="text" id="room-input" placeholder="ID du salon (ex: room-abcde)...">
+                    <input type="text" id="room-input" placeholder="ID du salon...">
                     <button id="join-room-btn" class="btn-secondary">Rejoindre</button>
                 </div>
             </div>
         </div>
 
         <div id="room-screen">
-            <div class="room-status" id="room-display-id">
-                Connecté au salon : Aucun
-            </div>
+            <div class="room-status" id="room-display-id">Connecté</div>
 
-            <!-- LECTEUR VIDÉO -->
+            <!-- VIDÉO -->
             <div class="card">
                 <h3><i class="fa-solid fa-play-pause"></i> Lecteur Vidéo Synchro</h3>
-                <span class="hint"><i class="fa-brands fa-youtube"></i> YouTube (Synchro Live) | <i class="fa-solid fa-file-video"></i> Vidéos MP4 (.mp4, /videos/)</span>
                 <div class="input-group">
-                    <input type="text" id="video-url-input" placeholder="Lien MP4, /videos/, URL YouTube...">
+                    <input type="text" id="video-url-input" placeholder="Lien MP4, YouTube...">
                     <button id="load-video-btn">Charger</button>
                 </div>
-                
                 <div class="media-container" id="media-box">
                     <video id="video-player" controls></video>
                 </div>
-
-                <!-- Contrôle de Volume Dédié Vidéo -->
                 <div class="volume-control">
                     <i class="fa-solid fa-volume-high"></i>
                     <input type="range" id="video-volume" class="volume-slider" min="0" max="100" value="100">
                 </div>
             </div>
 
-            <!-- ESPACE AUDIO / CONVERTISSEUR SPOTIFY SANS CONTRAINTE -->
+            <!-- MUSIQUE (RETOUR DU VRAI SPOTIFY EMBED) -->
             <div class="card">
                 <h3><i class="fa-solid fa-music music-icon"></i> Espace Musique & Playlists</h3>
-                <span class="hint"><i class="fa-brands fa-spotify"></i> Collez un lien Spotify (Titre, Album, Playlist) ou un .mp3 | **Volume 100% contrôlable**</span>
+                <span class="hint"><i class="fa-brands fa-spotify"></i> Utilisez le bouton volume en bas à droite du lecteur Spotify pour régler précisément le son !</span>
                 <div class="input-group">
-                    <input type="text" id="audio-url-input" placeholder="Lien Spotify ou URL direct de fichier .mp3...">
+                    <input type="text" id="audio-url-input" placeholder="Lien Spotify ou .mp3...">
                     <button id="load-audio-btn">Lancer la Musique</button>
                 </div>
                 <div id="audio-box" class="audio-container">
                     <audio id="audio-player" controls style="width: 100%; display: none;"></audio>
-                    <div id="yt-audio-wrapper">
-                        <div id="yt-audio-placeholder"></div>
-                    </div>
                 </div>
-
-                <!-- Contrôle de Volume Dédié Musique (Marche aussi pour Spotify !) -->
                 <div class="volume-control">
                     <i class="fa-solid fa-sliders"></i>
-                    <span style="font-size: 0.85rem; color: var(--text-muted); margin-right: 5px;">Volume Musique :</span>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Volume MP3 :</span>
                     <input type="range" id="audio-volume" class="volume-slider" min="0" max="100" value="80">
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Script API YouTube officiel -->
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="/socket.io/socket.io.js"></script>
-    
     <script>
         const socket = io();
-
         const authScreen = document.getElementById('auth-screen');
         const roomScreen = document.getElementById('room-screen');
         const roomDisplayId = document.getElementById('room-display-id');
-
         const btnCreateRoom = document.getElementById('create-room-btn');
         const roomInput = document.getElementById('room-input');
         const btnJoinRoom = document.getElementById('join-room-btn');
         const videoUrlInput = document.getElementById('video-url-input');
         const btnLoadVideo = document.getElementById('load-video-btn');
         const mediaBox = document.getElementById('media-box');
-
         const audioBox = document.getElementById('audio-box');
         const audioUrlInput = document.getElementById('audio-url-input');
         const btnLoadAudio = document.getElementById('load-audio-btn');
-
-        // Éléments Volumes
         const videoVolumeSlider = document.getElementById('video-volume');
         const audioVolumeSlider = document.getElementById('audio-volume');
 
         let currentRoomId = null;
         let isSyncing = false;
-        
-        // Instances Lecteurs
-        let ytPlayer = null; 
+        let ytPlayer = null;
         let ytLastState = -1;
-        
-        let ytAudioPlayer = null; // Lecteur YouTube caché servant pour Spotify
-        let ytAudioLastState = -1;
 
         const urlParams = new URLSearchParams(window.location.search);
-        const roomIdFromUrl = urlParams.get('room');
-        if (roomIdFromUrl) initializeRoom(roomIdFromUrl);
+        if (urlParams.get('room')) initializeRoom(urlParams.get('room'));
 
-        if (btnCreateRoom) {
-            btnCreateRoom.addEventListener('click', () => {
-                const randomId = 'room-' + Math.random().toString(36).substring(2, 9);
-                initializeRoom(randomId);
-            });
-        }
-
-        if (btnJoinRoom) {
-            btnJoinRoom.addEventListener('click', () => {
-                const roomId = roomInput.value.trim();
-                if (roomId) initializeRoom(roomId);
-            });
-        }
+        if (btnCreateRoom) btnCreateRoom.addEventListener('click', () => initializeRoom('room-' + Math.random().toString(36).substring(2, 9)));
+        if (btnJoinRoom) btnJoinRoom.addEventListener('click', () => roomInput.value.trim() && initializeRoom(roomInput.value.trim()));
 
         function initializeRoom(roomId) {
             currentRoomId = roomId;
             window.history.pushState({}, '', `?room=${roomId}`);
             socket.emit('join-room', { roomId, username: 'Utilisateur' });
-            
             authScreen.style.display = 'none';
             roomScreen.style.display = 'block';
-            roomDisplayId.innerHTML = `<i class="fa-solid fa-circle-check"></i> Salon Privé Actif : <strong>${roomId}</strong>`;
+            roomDisplayId.innerHTML = `<i class="fa-solid fa-circle-check"></i> Salon Privé : <strong>${roomId}</strong>`;
         }
 
-        // --- GESTION DU VOLUME DESDE LE SITE ---
+        // Volumes
         videoVolumeSlider.addEventListener('input', (e) => {
-            const vol = e.target.value;
             const vp = document.getElementById('video-player');
-            if (vp) vp.volume = vol / 100;
-            if (ytPlayer && typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(vol);
+            if (vp) vp.volume = e.target.value / 100;
+            if (ytPlayer && typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(e.target.value);
         });
 
         audioVolumeSlider.addEventListener('input', (e) => {
-            const vol = e.target.value;
             const ap = document.getElementById('audio-player');
-            if (ap) ap.volume = vol / 100;
-            if (ytAudioPlayer && typeof ytAudioPlayer.setVolume === 'function') ytAudioPlayer.setVolume(vol);
+            if (ap) ap.volume = e.target.value / 100;
         });
 
-
-        // --- SECTION LECTEUR VIDÉO ---
+        // Vidéos
         if (btnLoadVideo) {
             btnLoadVideo.addEventListener('click', () => {
                 const url = videoUrlInput.value.trim();
@@ -395,50 +330,35 @@
         function loadMediaSource(url) {
             ytPlayer = null;
             if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                let videoId = '';
-                if(url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split(/[?#]/)[0];
-                else if(url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
-                
+                let videoId = url.includes('youtu.be/') ? url.split('youtu.be/')[1].split(/[?#]/)[0] : url.split('v=')[1].split('&')[0];
                 mediaBox.innerHTML = `<div id="yt-player-placeholder"></div>`;
                 ytPlayer = new YT.Player('yt-player-placeholder', {
                     videoId: videoId,
-                    playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0 },
+                    playerVars: { 'autoplay': 1, 'controls': 1 },
                     events: {
-                        'onStateChange': onYoutubePlayerStateChange,
-                        'onReady': (e) => { e.target.setVolume(videoVolumeSlider.value); }
+                        'onStateChange': (e) => {
+                            if (isSyncing) return;
+                            if (e.data === 1 && ytLastState !== 1) socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: ytPlayer.getCurrentTime() });
+                            if (e.data === 2 && ytLastState !== 2) socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: ytPlayer.getCurrentTime() });
+                            ytLastState = e.data;
+                        },
+                        'onReady': (e) => e.target.setVolume(videoVolumeSlider.value)
                     }
                 });
             } else {
                 mediaBox.innerHTML = `<video id="video-player" controls autoplay src="${url}"></video>`;
                 setTimeout(() => {
                     const vp = document.getElementById('video-player');
-                    if(vp) vp.volume = videoVolumeSlider.value / 100;
-                    bindVideoEvents();
-                }, 200); 
+                    if(vp) {
+                        vp.volume = videoVolumeSlider.value / 100;
+                        vp.onplay = () => !isSyncing && socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: vp.currentTime });
+                        vp.onpause = () => !isSyncing && socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: vp.currentTime });
+                    }
+                }, 200);
             }
         }
 
-        function onYoutubePlayerStateChange(event) {
-            if (isSyncing || !currentRoomId || !ytPlayer) return;
-            const currentTime = ytPlayer.getCurrentTime();
-            if (event.data === YT.PlayerState.PLAYING && ytLastState !== YT.PlayerState.PLAYING) {
-                socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: currentTime });
-            } else if (event.data === YT.PlayerState.PAUSED && ytLastState !== YT.PlayerState.PAUSED) {
-                socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: currentTime });
-            }
-            ytLastState = event.data;
-        }
-
-        function bindVideoEvents() {
-            const vp = document.getElementById('video-player');
-            if(!vp) return;
-            vp.onplay = () => { if (!isSyncing) socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: vp.currentTime }); };
-            vp.onpause = () => { if (!isSyncing) socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: vp.currentTime }); };
-            vp.onseeked = () => { if (!isSyncing) socket.emit('video-action', { roomId: currentRoomId, action: 'seek', currentTime: vp.currentTime }); };
-        }
-
-
-        // --- SECTION AUDIO (CONVERTISSEUR INVISIBLE SPOTIFY -> YT) ---
+        // Musiques
         if (btnLoadAudio) {
             btnLoadAudio.addEventListener('click', () => {
                 const url = audioUrlInput.value.trim();
@@ -450,97 +370,33 @@
         }
 
         function loadAudioSource(url) {
-            // Extinction des deux lecteurs possibles pour éviter les chevauchements
             const ap = document.getElementById('audio-player');
             ap.style.display = 'none';
             ap.src = '';
-            document.getElementById('yt-audio-wrapper').style.display = 'none';
-            ytAudioPlayer = null;
 
             if (url.includes('spotify.com')) {
-                // Extraction du titre à la louche ou ID pour requêter la version YouTube
-                // Dans un vrai système complexe on interrogerait une API. Ici on extrait l'identifiant pour requêter l'équivalent YouTube de façon dynamique.
-                // Pour assurer une synchro stable sans backend lourd, on va simuler la lecture via un ID musical générique ou transformer le lien Spotify.
-                // ASTUCE : On va chercher la piste correspondante. Pour la démo / stabilité, on charge un flux musical synchro
-                let fallbackTrackId = "jfKfPfyJRdk"; // Un flux Lofi par défaut si l'extraction échoue
-                
-                // Si l'URL contient des indices ou qu'on veut juste lier un morceau précis :
-                document.getElementById('yt-audio-wrapper').style.addRule ? document.getElementById('yt-audio-wrapper').style.addRule('display','block') : document.getElementById('yt-audio-wrapper').style.display = 'block';
-                document.getElementById('yt-audio-wrapper').innerHTML = `<div id="yt-audio-placeholder"></div>`;
-                
-                ytAudioPlayer = new YT.Player('yt-audio-placeholder', {
-                    videoId: fallbackTrackId,
-                    playerVars: { 'autoplay': 1, 'controls': 1 },
-                    events: {
-                        'onStateChange': onYoutubeAudioStateChange,
-                        'onReady': (e) => { e.target.setVolume(audioVolumeSlider.value); }
-                    }
-                });
+                let embedUrl = url.replace('spotify.com/', 'spotify.com/embed/');
+                audioBox.innerHTML = `<iframe src="${embedUrl}" width="100%" height="152" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen" loading="lazy"></iframe>`;
             } else {
-                // Fichier .mp3 standard
                 ap.style.display = 'block';
                 ap.src = url;
                 ap.volume = audioVolumeSlider.value / 100;
                 ap.play().catch(()=>{});
-                setTimeout(bindAudioEvents, 200);
             }
         }
 
-        function onYoutubeAudioStateChange(event) {
-            if (isSyncing || !currentRoomId || !ytAudioPlayer) return;
-            const currentTime = ytAudioPlayer.getCurrentTime();
-            if (event.data === YT.PlayerState.PLAYING && ytAudioLastState !== YT.PlayerState.PLAYING) {
-                socket.emit('audio-action', { roomId: currentRoomId, action: 'play', currentTime: currentTime });
-            } else if (event.data === YT.PlayerState.PAUSED && ytAudioLastState !== YT.PlayerState.PAUSED) {
-                socket.emit('audio-action', { roomId: currentRoomId, action: 'pause', currentTime: currentTime });
-            }
-            ytAudioLastState = event.data;
-        }
-
-        function bindAudioEvents() {
-            const ap = document.getElementById('audio-player');
-            if(!ap) return;
-            ap.onplay = () => { if(!isSyncing) socket.emit('audio-action', { roomId: currentRoomId, action: 'play', currentTime: ap.currentTime }); };
-            ap.onpause = () => { if(!isSyncing) socket.emit('audio-action', { roomId: currentRoomId, action: 'pause', currentTime: ap.currentTime }); };
-        }
-
-
-        // --- SINK DE RÉCEPTION SOCKETS ---
-        socket.on('user-changed-video', ({ videoUrl }) => { loadMediaSource(videoUrl); });
-        socket.on('user-changed-audio', ({ audioUrl }) => { loadAudioSource(audioUrl); });
-
+        socket.on('user-changed-video', ({ videoUrl }) => loadMediaSource(videoUrl));
+        socket.on('user-changed-audio', ({ audioUrl }) => loadAudioSource(audioUrl));
         socket.on('user-video-action', ({ action, currentTime }) => {
-            isSyncing = true; 
+            isSyncing = true;
             if (ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
                 if (Math.abs(ytPlayer.getCurrentTime() - currentTime) > 2) ytPlayer.seekTo(currentTime, true);
-                if (action === 'play') ytPlayer.playVideo();
-                else if (action === 'pause') ytPlayer.pauseVideo();
+                action === 'play' ? ytPlayer.playVideo() : ytPlayer.pauseVideo();
             } else {
                 const vp = document.getElementById('video-player');
-                if (vp) {
-                    vp.currentTime = currentTime;
-                    if (action === 'play') vp.play().catch(()=>{});
-                    else if (action === 'pause') vp.pause();
-                }
+                if (vp) { vp.currentTime = currentTime; action === 'play' ? vp.play().catch(()=>{}) : vp.pause(); }
             }
-            setTimeout(() => { isSyncing = false; }, 300);
-        });
-
-        socket.on('user-audio-action', ({ action, currentTime }) => {
-            isSyncing = true;
-            if (ytAudioPlayer && typeof ytAudioPlayer.getPlayerState === 'function') {
-                if (Math.abs(ytAudioPlayer.getCurrentTime() - currentTime) > 2) ytAudioPlayer.seekTo(currentTime, true);
-                if (action === 'play') ytAudioPlayer.playVideo();
-                else if (action === 'pause') ytAudioPlayer.pauseVideo();
-            } else {
-                const ap = document.getElementById('audio-player');
-                if (ap) {
-                    ap.currentTime = currentTime;
-                    if (action === 'play') ap.play().catch(()=>{});
-                    else if (action === 'pause') ap.pause();
-                }
-            }
-            setTimeout(() => { isSyncing = false; }, 300);
+            setTimeout(() => isSyncing = false, 300);
         });
     </script>
 </body>
