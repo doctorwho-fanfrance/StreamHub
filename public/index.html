@@ -3,559 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamHub - Mon Serveur Privé</title>
-    <!-- Import d'une police moderne et d'icônes -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Script de communication temps réel -->
-    <script src="/socket.io/socket.io.js"></script>
-    
+    <title>StreamHub - Regarder des vidéos ensemble</title>
     <style>
-        :root {
-            --bg-main: #0a0b10;
-            --bg-card: #141622;
-            --bg-input: #1c1f30;
-            --accent: #00f2fe;
-            --accent-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-            --music-gradient: linear-gradient(135deg, #f9d423 0%, #ff4e50 100%);
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
             margin: 0;
-            padding: 0;
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Barre latérale (Sidebar) pour l'ajout de vidéos et musiques */
-        .sidebar {
-            width: 340px;
-            background: var(--bg-card);
-            border-right: 1px solid #23263d;
-            padding: 25px 15px;
-            box-sizing: border-box;
+            padding: 200px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-            overflow-y: auto;
-            max-height: 100vh;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
         }
-
-        .form-group {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #23263d;
-        }
-
-        /* Section spéciale musique */
-        .form-group.music-box {
-            border-color: #ff4e5044;
-            background: linear-gradient(to bottom, rgba(255, 78, 80, 0.02), rgba(249, 212, 35, 0.02));
-        }
-
-        h3 {
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            margin-top: 0;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        input[type="text"], input[type="url"], input[type="file"] {
+        .container {
             width: 100%;
-            padding: 12px;
-            background: var(--bg-input);
-            border: 1px solid #2d314d;
-            border-radius: 8px;
-            color: white;
-            font-family: inherit;
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-            margin-bottom: 10px;
-            font-size: 13px;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
-        }
-        
-        button {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 8px;
-            color: #000;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
-            font-size: 14px;
-        }
-
-        button.btn-music {
-            background: var(--music-gradient);
-            color: #fff;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            opacity: 0.9;
-        }
-
-        /* Contenu Principal (Lecteur + Grille) */
-        .main-content {
-            flex: 1;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* Zone Cinéma (Lecteur) */
-        .cinema-zone {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border: 1px solid #1c1f30;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .cinema-zone video, .cinema-zone iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .no-video-placeholder {
+            max-width: 800px;
             text-align: center;
-            color: var(--text-muted);
         }
-
-        .no-video-placeholder i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .card {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-
-        /* Grille des Vidéos (Style Netflix/YouTube) */
-        .grid-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 20px;
-        }
-
-        .video-card {
-            background: var(--bg-card);
-            border: 1px solid #1c1f30;
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .video-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent);
-            box-shadow: 0 10px 20px rgba(0, 242, 254, 0.1);
-        }
-
-        .card-thumbnail {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: linear-gradient(45deg, #141622, #1c1f30);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #2d314d;
-            font-size: 32px;
-            position: relative;
-        }
-
-        .video-card:hover .card-thumbnail {
-            color: var(--accent);
-        }
-
-        .card-info {
-            position: relative;
-            padding: 15px;
-            padding-right: 40px;
-        }
-
-        .card-title {
-            font-weight: 600;
-            font-size: 15px;
-            margin: 0 0 5px 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .card-source {
-            font-size: 12px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* Bouton de suppression rouge */
-        .delete-btn {
-            position: absolute;
-            right: 15px;
-            bottom: 15px;
-            background: transparent;
-            color: #ef4444;
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 4px;
             border: none;
-            width: auto;
-            padding: 5px;
             font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.2s, color 0.2s;
         }
-
-        .delete-btn:hover {
-            color: #f87171;
-            transform: scale(1.2);
+        input {
+            width: 60%;
+            background-color: #2a2a2a;
+            color: white;
+        }
+        button {
+            background-color: #6200ee;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #3700b3;
+        }
+        video {
+            width: 100%;
+            max-height: 450px;
+            border-radius: 8px;
+            background-color: black;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
 
-    <!-- PANNEAU DE CONTROLE (GAUCHE) -->
-    <div class="sidebar">
-        <div class="logo">
-            <i class="fa-solid fa-square-play"></i>
-            <span>StreamHub</span>
-        </div>
+    <div class="container">
+        <h1>StreamHub 🎬</h1>
         
-        <hr style="border: 0; border-top: 1px solid #23263d; margin: 5px 0;">
-
-        <!-- SYSTÈME DE SALON (WATCH PARTY) -->
-        <div class="form-group" style="border-color: var(--accent);">
-            <h3><i class="fa-solid fa-users"></i> Salon Privé (Watch Party)</h3>
-            <div id="room-setup">
-                <button type="button" onclick="createRoom()">Créer un salon</button>
-                <span style="display: block; text-align: center; font-size: 11px; color: var(--text-muted); margin: 5px 0;">OU REJOINDRE</span>
-                <input type="text" id="roomCodeInput" placeholder="Entrez le code à 6 lettres...">
-                <button type="button" style="background: #2d314d; color: white;" onclick="joinRoom()">Rejoindre</button>
-            </div>
-            <div id="room-active" style="display: none; text-align: center;">
-                <p style="font-size: 14px; margin: 5px 0;">Salon actif : <strong id="activeCodeDisplay" style="color: var(--accent); font-size: 18px;">------</strong></p>
-                <p style="font-size: 12px; font-weight: 600; margin: 5px 0;">Votre rôle : <span id="roleDisplay" style="color: #fff;">Visiteur</span></p>
-                <p style="font-size: 11px; color: var(--text-muted);">Partagez ce code. Seul l'hôte synchronise les contenus pour tout le monde.</p>
-            </div>
+        <!-- Section Connexion / Salons -->
+        <div class="card">
+            <h3>Gestion du Salon</h3>
+            <button id="create-room-btn">Créer un salon privé</button>
+            <br><br>
+            <input type="text" id="room-input" placeholder="Entrer l'ID d'un salon existant...">
+            <button id="join-room-btn">Rejoindre</button>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #23263d; margin: 5px 0;">
-
-        <!-- MIXEUR MUSIQUE EN BACKGROUND -->
-        <div class="form-group music-box">
-            <h3 style="color: #ff4e50;"><i class="fa-solid fa-music"></i> Musique de Fond</h3>
+        <!-- Section Lecteur Vidéo -->
+        <div class="card">
+            <h3>Lecteur Synchronisé</h3>
+            <input type="text" id="video-url-input" placeholder="Coller le lien de votre vidéo (MP4, Direct URL)...">
+            <button id="load-video-btn">Charger la vidéo</button>
             
-            <!-- Option 1 : Fichier local -->
-            <input type="file" id="localAudioInput" accept="audio/*" style="margin-bottom: 5px;">
-            
-            <span style="display: block; text-align: center; font-size: 11px; color: var(--text-muted); margin: 3px 0;">OU</span>
-            
-            <!-- Option 2 : Lien (MP3 ou Spotify) -->
-            <input type="url" id="linkAudioInput" placeholder="Lien .mp3 ou lien de partage Spotify...">
-            <button type="button" class="btn-music" onclick="handleAudioLinkClick()">Lancer la musique</button>
-            
-            <!-- Zone de rendu dynamique pour l'audio -->
-            <div id="audioPlayerZone" style="margin-top: 10px;">
-                <audio id="bgMusicPlayer" controls loop style="width: 100%; height: 32px;"></audio>
-            </div>
-        </div>
-
-        <hr style="border: 0; border-top: 1px solid #23263d; margin: 5px 0;">
-
-        <!-- Formulaire Fichier Vidéo -->
-        <div class="form-group">
-            <h3><i class="fa-solid fa-file-arrow-up"></i> Fichier local</h3>
-            <form action="/upload-file" method="POST" enctype="multipart/form-data">
-                <input type="file" name="videoFile" accept="video/*" required>
-                <button type="submit">Ajouter à la bibliothèque</button>
-            </form>
-        </div>
-
-        <!-- Formulaire Lien Vidéo -->
-        <div class="form-group">
-            <h3><i class="fa-solid fa-link"></i> Lien Web</h3>
-            <form action="/upload-link" method="POST">
-                <input type="text" name="videoTitle" placeholder="Donnez un titre..." required>
-                <input type="url" name="videoLink" placeholder="Lien YouTube, Twitch, MP4..." required>
-                <button type="submit">Ajouter le flux</button>
-            </form>
+            <video id="video-player" controls></video>
         </div>
     </div>
 
-    <!-- ZONE DE VISIONNAGE & CATALOGUE (DROITE) -->
-    <div class="main-content">
-        
-        <!-- Le Lecteur Vidéo principal -->
-        <div class="cinema-zone" id="playerZone">
-            <div class="no-video-placeholder">
-                <i class="fa-solid fa-clapperboard"></i>
-                <p>Prêt à streamer. Choisissez un contenu ci-dessous.</p>
-            </div>
-        </div>
-
-        <!-- Le Catalogue de cartes -->
-        <h2 class="grid-title"><i class="fa-solid fa-film"></i> Votre Bibliothèque</h2>
-        <div class="video-grid" id="playlist">
-            <!-- Les cartes de vidéos s'afficheront ici -->
-        </div>
-    </div>
-
+    <!-- Script de communication Socket.io fourni par le serveur -->
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Connexion à Socket.io
-        const socket = io();
-        let currentRoomCode = null;
-        let isHost = false; // Permet de savoir si cet utilisateur est le créateur (l'hôte)
+        const socket = io(); // Connexion automatique à l'adresse Render du site
 
-        // --- LOGIQUE DES SALONS PRIVÉS (TEMPS RÉEL + RÔLES) ---
-        function createRoom() {
-            socket.emit('createRoom');
+        // Récupération des éléments de l'interface
+        const btnCreateRoom = document.getElementById('create-room-btn');
+        const roomInput = document.getElementById('room-input');
+        const btnJoinRoom = document.getElementById('join-room-btn');
+        const videoPlayer = document.getElementById('video-player');
+        const videoUrlInput = document.getElementById('video-url-input');
+        const btnLoadVideo = document.getElementById('load-video-btn');
+
+        let currentRoomId = null;
+        let isSyncing = false; // Drapeau pour bloquer les boucles infinies d'événements
+
+        // --- GESTION DE LA PERSISTENCE AU REFRESH (F5) ---
+        // Au chargement, on extrait l'identifiant "?room=xxxx" s'il existe dans l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomIdFromUrl = urlParams.get('room');
+
+        if (roomIdFromUrl) {
+            initializeRoom(roomIdFromUrl);
         }
 
-        function joinRoom() {
-            const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-            if (code) {
-                socket.emit('joinRoom', code);
-            }
-        }
-
-        socket.on('roomCreated', (code) => {
-            isHost = true; // On a créé le salon, on est l'hôte !
-            updateRoomUI(code);
-        });
-
-        socket.on('roomJoined', (code) => {
-            isHost = false; // On rejoint un salon existant, on est invité !
-            updateRoomUI(code);
-        });
-
-        socket.on('roomError', (message) => {
-            alert(message);
-        });
-
-        function updateRoomUI(code) {
-            currentRoomCode = code;
-            document.getElementById('room-setup').style.display = 'none';
-            document.getElementById('room-active').style.display = 'block';
-            document.getElementById('activeCodeDisplay').textContent = code;
-            
-            const roleDisplay = document.getElementById('roleDisplay');
-            if (isHost) {
-                roleDisplay.textContent = "👑 Hôte (Gestionnaire)";
-                roleDisplay.style.color = "var(--accent)";
-            } else {
-                roleDisplay.textContent = "👤 Invité";
-                roleDisplay.style.color = "#9ca3af";
-            }
-        }
-
-        // Événement reçu par TOUT LE MONDE lorsque l'hôte change de vidéo
-        socket.on('changeVideo', (videoUrl) => {
-            const playerZone = document.getElementById('playerZone');
-            playerZone.innerHTML = getEmbedContainer(videoUrl);
-        });
-
-        // Événement reçu par TOUT LE MONDE lorsque l'hôte change la musique de fond
-        socket.on('changeAudio', (audioUrl) => {
-            renderAudioPlayer(audioUrl);
-        });
-
-
-        // --- LOGIQUE AUDIO DE FOND ---
-        function handleAudioLinkClick() {
-            const url = document.getElementById('linkAudioInput').value.trim();
-            if (!url) {
-                alert("Veuillez entrer une adresse URL.");
-                return;
-            }
-
-            // Si on est dans un salon ET qu'on est l'hôte, on synchronise chez tout le monde
-            if (currentRoomCode && isHost) {
-                socket.emit('audioSelected', { roomCode: currentRoomCode, audioUrl: url });
-            } else {
-                // Sinon (hors salon ou simple invité), on lance l'audio uniquement pour soi-même
-                renderAudioPlayer(url);
-            }
-        }
-
-        // Gère l'envoi d'un fichier audio local
-        document.getElementById('localAudioInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const objectURL = URL.createObjectURL(file);
-                // Note : Les objectURL locaux ne peuvent pas être partagés via internet.
-                // Donc le fichier local se lance uniquement pour soi-même par sécurité.
-                renderAudioPlayer(objectURL);
-            }
-        });
-
-        // Fonction qui construit et injecte le lecteur audio
-        function renderAudioPlayer(url) {
-            const playerZone = document.getElementById('audioPlayerZone');
-            if (url.includes('spotify.com/')) {
-                let cleanUrl = url.split('?')[0]; 
-                cleanUrl = cleanUrl.replace(/intl-[a-z]{2}\//i, '');
-                let embedUrl = cleanUrl.replace('spotify.com/', 'spotify.com/embed/');
-                playerZone.innerHTML = `<iframe src="${embedUrl}" width="100%" height="80" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius: 8px;"></iframe>`;
-            } else {
-                playerZone.innerHTML = `<audio id="bgMusicPlayer" controls loop style="width: 100%; height: 32px;" src="${url}"></audio>`;
-                document.getElementById('bgMusicPlayer').play().catch(err => console.log("Lecture automatique bloquée par le navigateur, en attente d'interaction."));
-            }
-        }
-
-
-        // --- LOGIQUE SOURCE & EMBED VIDEO ---
-        function getSourceInfo(url) {
-            if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                return { name: 'YouTube', icon: 'fa-brands fa-youtube', color: '#ff0000' };
-            }
-            if (url.includes('twitch.tv')) {
-                return { name: 'Twitch', icon: 'fa-brands fa-twitch', color: '#9146ff' };
-            }
-            return { name: 'Serveur Local', icon: 'fa-solid fa-hard-drive', color: '#00f2fe' };
-        }
-
-        function getEmbedContainer(url) {
-            if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
-                let videoId = '';
-                if (url.includes('youtube.com/watch')) {
-                    videoId = new URL(url).searchParams.get('v');
-                } else if (url.includes('youtu.be/')) {
-                    videoId = url.split('/').pop().split('?')[0];
-                }
-                return `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allowfullscreen allow="autoplay"></iframe>`;
-            }
-            
-            if (url.includes('twitch.tv/videos/')) {
-                let videoId = url.split('videos/')[1].split('?')[0];
-                return `<iframe src="https://player.twitch.tv/?video=${videoId}&parent=localhost&autoplay=true" allowfullscreen></iframe>`;
-            }
-            
-            if (url.includes('twitch.tv/')) {
-                let channelName = url.split('twitch.tv/')[1].split('?')[0];
-                return `<iframe src="https://player.twitch.tv/?channel=${channelName}&parent=localhost&autoplay=true" allowfullscreen></iframe>`;
-            }
-
-            return `<video src="${url}" controls autoplay></video>`;
-        }
-
-
-        // --- SUPPRESSION & RATTACHEMENT DU CATALOGUE ---
-        async function deleteVideo(id, event) {
-            event.stopPropagation();
-            if (confirm("Voulez-vous vraiment supprimer cette vidéo ?")) {
-                const res = await fetch(`/api/videos/${id}`, { method: 'DELETE' });
-                const result = await res.json();
-                if (result.success) {
-                    loadVideos();
-                } else {
-                    alert("Erreur lors de la suppression : " + result.message);
-                }
-            }
-        }
-
-        async function loadVideos() {
-            const res = await fetch('/api/videos');
-            const videos = await res.json();
-            const playlist = document.getElementById('playlist');
-            const playerZone = document.getElementById('playerZone');
-            
-            if(videos.length > 0) {
-                playlist.innerHTML = '';
-            } else {
-                playlist.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">La bibliothèque est vide. Ajoutez votre première vidéo depuis le panneau de gauche !</p>';
-                return;
-            }
-            
-            videos.forEach(video => {
-                const source = getSourceInfo(video.url);
-                
-                const card = document.createElement('div');
-                card.className = 'video-card';
-                card.innerHTML = `
-                    <div class="card-thumbnail">
-                        <i class="${source.icon}"></i>
-                    </div>
-                    <div class="card-info">
-                        <h4 class="card-title">${video.title}</h4>
-                        <div class="card-source">
-                            <i class="${source.icon}" style="color: ${source.color}"></i>
-                            <span>${source.name}</span>
-                        </div>
-                        <button class="delete-btn" onclick="deleteVideo('${video.id}', event)" title="Supprimer">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
-                `;
-                
-                card.onclick = () => {
-                    // Si on est dans un salon ET qu'on est l'hôte -> On pousse le changement à tout le monde
-                    if (currentRoomCode && isHost) {
-                        socket.emit('videoSelected', { roomCode: currentRoomCode, videoUrl: video.url });
-                    } else {
-                        // Si on n'est pas dans un salon ou qu'on est un simple invité -> Changement purement local (uniquement pour soi)
-                        playerZone.innerHTML = getEmbedContainer(video.url);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                };
-                
-                playlist.appendChild(card);
+        // Clic sur le bouton "Créer un salon privé"
+        if (btnCreateRoom) {
+            btnCreateRoom.addEventListener('click', () => {
+                const randomId = 'room-' + Math.random().toString(36).substring(2, 9);
+                initializeRoom(randomId);
             });
         }
-        
-        loadVideos();
+
+        // Clic sur le bouton "Rejoindre"
+        if (btnJoinRoom) {
+            btnJoinRoom.addEventListener('click', () => {
+                const roomId = roomInput.value.trim();
+                if (roomId) initializeRoom(roomId);
+            });
+        }
+
+        function initializeRoom(roomId) {
+            currentRoomId = roomId;
+            
+            // On met à jour l'URL du navigateur dynamiquement sans recharger la page
+            window.history.pushState({}, '', `?room=${roomId}`);
+            
+            // Notification au serveur Socket
+            socket.emit('join-room', { roomId, username: 'Utilisateur' });
+            
+            console.log(`Connecté au salon : ${roomId}`);
+            alert(`Salon connecté ! Partagez ce lien exact pour inviter vos amis : \n${window.location.href}`);
+        }
+
+        // --- ENVOI DES ACTIONS DU LECTEUR AU SERVEUR ---
+
+        // Clic sur "Charger la vidéo"
+        if (btnLoadVideo) {
+            btnLoadVideo.addEventListener('click', () => {
+                const url = videoUrlInput.value.trim();
+                if (url && currentRoomId) {
+                    videoPlayer.src = url;
+                    videoPlayer.play();
+                    socket.emit('change-video', { roomId: currentRoomId, videoUrl: url });
+                }
+            });
+        }
+
+        // Détection du bouton Play
+        videoPlayer.addEventListener('play', () => {
+            if (isSyncing || !currentRoomId) return;
+            socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: videoPlayer.currentTime });
+        });
+
+        // Détection du bouton Pause
+        videoPlayer.addEventListener('pause', () => {
+            if (isSyncing || !currentRoomId) return;
+            socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: videoPlayer.currentTime });
+        });
+
+        // Détection du déplacement dans la barre de temps (Seek)
+        videoPlayer.addEventListener('seeked', () => {
+            if (isSyncing || !currentRoomId) return;
+            socket.emit('video-action', { roomId: currentRoomId, action: 'seek', currentTime: videoPlayer.currentTime });
+        });
+
+        // --- RÉCEPTION DES ACTIONS EN PROVENANCE DU SERVEUR ---
+
+        // Un ami a changé la source de la vidéo
+        socket.on('user-changed-video', ({ videoUrl }) => {
+            isSyncing = true;
+            videoPlayer.src = videoUrl;
+            videoPlayer.play();
+            isSyncing = false;
+        });
+
+        // Un ami a fait Play / Pause / Reculé / Avancé
+        socket.on('user-video-action', ({ action, currentTime }) => {
+            isSyncing = true;
+            videoPlayer.currentTime = currentTime;
+            if (action === 'play') {
+                videoPlayer.play();
+            } else if (action === 'pause') {
+                videoPlayer.pause();
+            }
+            isSyncing = false;
+        });
+
+        // Synchronisation à l'arrivée dans un salon où une vidéo tourne déjà
+        socket.on('sync-video', ({ videoUrl, isPlaying }) => {
+            isSyncing = true;
+            videoPlayer.src = videoUrl;
+            if (isPlaying) {
+                videoPlayer.play();
+            }
+            isSyncing = false;
+        });
     </script>
 </body>
 </html>
