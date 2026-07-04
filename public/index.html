@@ -4,89 +4,250 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamHub - Regarder des vidéos ensemble</title>
+    <!-- Import d'une police moderne et d'icônes sympas -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f0c1b 0%, #05050d 100%);
+            --card-bg: rgba(20, 20, 35, 0.65);
+            --accent-primary: #8a2be2;
+            --accent-secondary: #4a00e0;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glow: 0 0 20px rgba(138, 43, 226, 0.4);
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
             margin: 0;
-            padding: 200px;
+            padding: 40px 20px;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
+            box-sizing: border-box;
         }
+
         .container {
             width: 100%;
-            max-width: 800px;
+            max-width: 950px;
+        }
+
+        /* En-tête stylé */
+        header {
             text-align: center;
+            margin-bottom: 40px;
         }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            background: linear-gradient(45deg, #ff007f, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(138, 43, 226, 0.2);
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        /* Grille pour les contrôles du salon */
+        .grid-setup {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-setup { grid-template-columns: 1fr; }
+        }
+
+        /* Cartes au look "Glassmorphism" (verre dépoli) */
         .card {
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: transform 0.3s ease, border-color 0.3s ease;
         }
-        input, button {
-            padding: 10px;
-            margin: 5px;
-            border-radius: 4px;
-            border: none;
-            font-size: 16px;
+
+        .card:hover {
+            border-color: rgba(138, 43, 226, 0.3);
         }
+
+        .card h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+        }
+
+        .card h3 i {
+            color: #ff007f;
+        }
+
+        /* Champs de saisie */
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
         input {
-            width: 60%;
-            background-color: #2a2a2a;
-            color: white;
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
         }
+
+        input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+        }
+
+        /* Boutons au look moderne et dynamique */
         button {
-            background-color: #6200ee;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border: none;
+            border-radius: 10px;
             color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
-            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         button:hover {
-            background-color: #3700b3;
+            transform: translateY(-2px);
+            box-shadow: var(--glow);
+            filter: brightness(1.1);
         }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+        }
+
+        /* Section Lecteur Vidéo principal */
+        .theater-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+        }
+
+        .url-bar {
+            margin-bottom: 20px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
         video {
             width: 100%;
-            max-height: 450px;
-            border-radius: 8px;
-            background-color: black;
-            margin-top: 15px;
+            display: block;
+            outline: none;
+            aspect-ratio: 16 / 9;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>StreamHub 🎬</h1>
+        <!-- Header -->
+        <header>
+            <h1>StreamHub</h1>
+            <p>Vos salons de streaming privés, parfaitement synchronisés.</p>
+        </header>
         
-        <!-- Section Connexion / Salons -->
-        <div class="card">
-            <h3>Gestion du Salon</h3>
-            <button id="create-room-btn">Créer un salon privé</button>
-            <br><br>
-            <input type="text" id="room-input" placeholder="Entrer l'ID d'un salon existant...">
-            <button id="join-room-btn">Rejoindre</button>
+        <!-- Blocs d'installation et de connexion -->
+        <div class="grid-setup">
+            <!-- Création -->
+            <div class="card">
+                <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Lancer une session</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 20px 0;">Créez instantanément un salon vidéo privé et invitez vos amis à vous rejoindre.</p>
+                <button id="create-room-btn" class="btn-block">
+                    <i class="fa-solid fa-plus"></i> Créer un salon privé
+                </button>
+            </div>
+
+            <!-- Rejoindre -->
+            <div class="card">
+                <h3><i class="fa-solid fa-right-to-bracket"></i> Rejoindre un ami</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 20px 0;">Insérez l'identifiant unique ou le code du salon pour synchroniser vos écrans.</p>
+                <div class="input-group">
+                    <input type="text" id="room-input" placeholder="ID du salon (ex: room-abcde)...">
+                    <button id="join-room-btn" class="btn-secondary">Rejoindre</button>
+                </div>
+            </div>
         </div>
 
-        <!-- Section Lecteur Vidéo -->
-        <div class="card">
-            <h3>Lecteur Synchronisé</h3>
-            <input type="text" id="video-url-input" placeholder="Coller le lien de votre vidéo (MP4, Direct URL)...">
-            <button id="load-video-btn">Charger la vidéo</button>
+        <!-- Le Cinéma / Lecteur Vidéo principal -->
+        <div class="theater-card">
+            <div class="input-group url-bar">
+                <input type="text" id="video-url-input" placeholder="Collez le lien direct d'une vidéo (ex: https://site.com/video.mp4)...">
+                <button id="load-video-btn">
+                    <i class="fa-solid fa-play-pause"></i> Sync Média
+                </button>
+            </div>
             
-            <video id="video-player" controls></video>
+            <div class="video-wrapper">
+                <video id="video-player" controls placeholder="Aucun flux chargé"></video>
+            </div>
         </div>
     </div>
 
     <!-- Script de communication Socket.io fourni par le serveur -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io(); // Connexion automatique à l'adresse Render du site
+        const socket = io();
 
-        // Récupération des éléments de l'interface
         const btnCreateRoom = document.getElementById('create-room-btn');
         const roomInput = document.getElementById('room-input');
         const btnJoinRoom = document.getElementById('join-room-btn');
@@ -95,10 +256,9 @@
         const btnLoadVideo = document.getElementById('load-video-btn');
 
         let currentRoomId = null;
-        let isSyncing = false; // Drapeau pour bloquer les boucles infinies d'événements
+        let isSyncing = false;
 
-        // --- GESTION DE LA PERSISTENCE AU REFRESH (F5) ---
-        // Au chargement, on extrait l'identifiant "?room=xxxx" s'il existe dans l'URL
+        // Récupération automatique du salon via l'URL
         const urlParams = new URLSearchParams(window.location.search);
         const roomIdFromUrl = urlParams.get('room');
 
@@ -106,7 +266,6 @@
             initializeRoom(roomIdFromUrl);
         }
 
-        // Clic sur le bouton "Créer un salon privé"
         if (btnCreateRoom) {
             btnCreateRoom.addEventListener('click', () => {
                 const randomId = 'room-' + Math.random().toString(36).substring(2, 9);
@@ -114,7 +273,6 @@
             });
         }
 
-        // Clic sur le bouton "Rejoindre"
         if (btnJoinRoom) {
             btnJoinRoom.addEventListener('click', () => {
                 const roomId = roomInput.value.trim();
@@ -124,20 +282,12 @@
 
         function initializeRoom(roomId) {
             currentRoomId = roomId;
-            
-            // On met à jour l'URL du navigateur dynamiquement sans recharger la page
             window.history.pushState({}, '', `?room=${roomId}`);
-            
-            // Notification au serveur Socket
             socket.emit('join-room', { roomId, username: 'Utilisateur' });
-            
             console.log(`Connecté au salon : ${roomId}`);
-            alert(`Salon connecté ! Partagez ce lien exact pour inviter vos amis : \n${window.location.href}`);
         }
 
-        // --- ENVOI DES ACTIONS DU LECTEUR AU SERVEUR ---
-
-        // Clic sur "Charger la vidéo"
+        // --- ENVOI DES ACTIONS ---
         if (btnLoadVideo) {
             btnLoadVideo.addEventListener('click', () => {
                 const url = videoUrlInput.value.trim();
@@ -149,27 +299,22 @@
             });
         }
 
-        // Détection du bouton Play
         videoPlayer.addEventListener('play', () => {
             if (isSyncing || !currentRoomId) return;
             socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: videoPlayer.currentTime });
         });
 
-        // Détection du bouton Pause
         videoPlayer.addEventListener('pause', () => {
             if (isSyncing || !currentRoomId) return;
             socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: videoPlayer.currentTime });
         });
 
-        // Détection du déplacement dans la barre de temps (Seek)
         videoPlayer.addEventListener('seeked', () => {
             if (isSyncing || !currentRoomId) return;
             socket.emit('video-action', { roomId: currentRoomId, action: 'seek', currentTime: videoPlayer.currentTime });
         });
 
-        // --- RÉCEPTION DES ACTIONS EN PROVENANCE DU SERVEUR ---
-
-        // Un ami a changé la source de la vidéo
+        // --- RÉCEPTION DES ÉVÉNEMENTS ---
         socket.on('user-changed-video', ({ videoUrl }) => {
             isSyncing = true;
             videoPlayer.src = videoUrl;
@@ -177,7 +322,6 @@
             isSyncing = false;
         });
 
-        // Un ami a fait Play / Pause / Reculé / Avancé
         socket.on('user-video-action', ({ action, currentTime }) => {
             isSyncing = true;
             videoPlayer.currentTime = currentTime;
@@ -189,7 +333,6 @@
             isSyncing = false;
         });
 
-        // Synchronisation à l'arrivée dans un salon où une vidéo tourne déjà
         socket.on('sync-video', ({ videoUrl, isPlaying }) => {
             isSyncing = true;
             videoPlayer.src = videoUrl;
