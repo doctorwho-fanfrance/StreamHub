@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamHub - Regarder des vidéos ensemble</title>
-    <!-- Import d'une police moderne et d'icônes sympas -->
+    <title>StreamHub - Regarder et Écouter Ensemble</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -37,7 +36,6 @@
             max-width: 950px;
         }
 
-        /* En-tête stylé */
         header {
             text-align: center;
             margin-bottom: 40px;
@@ -50,17 +48,10 @@
             background: linear-gradient(45deg, #ff007f, #8a2be2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(138, 43, 226, 0.2);
         }
 
-        header p {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            margin: 0;
-        }
-
-        /* Grille pour les contrôles du salon */
-        .grid-setup {
+        /* ÉCRAN D'ACCUEIL (Masqué quand connecté) */
+        #auth-screen {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
@@ -68,10 +59,24 @@
         }
 
         @media (max-width: 768px) {
-            .grid-setup { grid-template-columns: 1fr; }
+            #auth-screen { grid-template-columns: 1fr; }
         }
 
-        /* Cartes au look "Glassmorphism" (verre dépoli) */
+        /* INTERFACE DU SALON (Masquée au début) */
+        #room-screen {
+            display: none;
+        }
+
+        .room-status {
+            background: rgba(138, 43, 226, 0.2);
+            border: 1px solid var(--accent-primary);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
         .card {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
@@ -80,11 +85,7 @@
             padding: 25px;
             border-radius: 16px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-
-        .card:hover {
-            border-color: rgba(138, 43, 226, 0.3);
+            margin-bottom: 25px;
         }
 
         .card h3 {
@@ -93,17 +94,15 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            color: #fff;
         }
 
-        .card h3 i {
-            color: #ff007f;
-        }
+        .card h3 i { color: #ff007f; }
+        .card h3 i.music-icon { color: #00f2fe; }
 
-        /* Champs de saisie */
         .input-group {
             display: flex;
             gap: 10px;
+            margin-bottom: 15px;
         }
 
         input {
@@ -113,114 +112,91 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             color: #fff;
-            font-size: 0.95rem;
-            font-family: inherit;
             outline: none;
-            transition: all 0.3s ease;
         }
 
         input:focus {
-            background: rgba(255, 255, 255, 0.08);
             border-color: var(--accent-primary);
             box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
         }
 
-        /* Boutons au look moderne et dynamique */
         button {
             padding: 12px 24px;
             background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
             border: none;
             border-radius: 10px;
             color: white;
-            font-size: 0.95rem;
             font-weight: 600;
-            font-family: inherit;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
         }
 
         button:hover {
             transform: translateY(-2px);
             box-shadow: var(--glow);
-            filter: brightness(1.1);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
+        .btn-block { width: 100%; }
+        .btn-secondary { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); }
 
-        .btn-block {
-            width: 100%;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: none;
-        }
-
-        /* Section Lecteur Vidéo principal */
-        .theater-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
-        }
-
-        .url-bar {
-            margin-bottom: 20px;
-        }
-
-        .video-wrapper {
+        /* MULTIMEDIA WRAPPERS */
+        .media-container {
             position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
             border-radius: 12px;
             overflow: hidden;
-            background: #000;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        video {
+        video, iframe {
             width: 100%;
-            display: block;
+            height: 100%;
+            border: none;
+        }
+
+        /* Lecteur Musique Épuré */
+        .audio-player-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+
+        audio {
+            flex: 1;
             outline: none;
-            aspect-ratio: 16 / 9;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- Header -->
         <header>
             <h1>StreamHub</h1>
-            <p>Vos salons de streaming privés, parfaitement synchronisés.</p>
+            <p>Salons privés synchronisés pour vidéos, streams et musique.</p>
         </header>
         
-        <!-- Blocs d'installation et de connexion -->
-        <div class="grid-setup">
-            <!-- Création -->
+        <!-- ÉCRAN D'ACCUEIL (CREATION / REJOINDRE) -->
+        <div id="auth-screen">
             <div class="card">
                 <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Lancer une session</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 20px 0;">Créez instantanément un salon vidéo privé et invitez vos amis à vous rejoindre.</p>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Créez un salon vidéo privé et invitez vos amis.</p>
                 <button id="create-room-btn" class="btn-block">
                     <i class="fa-solid fa-plus"></i> Créer un salon privé
                 </button>
             </div>
 
-            <!-- Rejoindre -->
             <div class="card">
                 <h3><i class="fa-solid fa-right-to-bracket"></i> Rejoindre un ami</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 20px 0;">Insérez l'identifiant unique ou le code du salon pour synchroniser vos écrans.</p>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Entrez l'identifiant pour vous synchroniser.</p>
                 <div class="input-group">
                     <input type="text" id="room-input" placeholder="ID du salon (ex: room-abcde)...">
                     <button id="join-room-btn" class="btn-secondary">Rejoindre</button>
@@ -228,40 +204,69 @@
             </div>
         </div>
 
-        <!-- Le Cinéma / Lecteur Vidéo principal -->
-        <div class="theater-card">
-            <div class="input-group url-bar">
-                <input type="text" id="video-url-input" placeholder="Collez le lien direct d'une vidéo (ex: https://site.com/video.mp4)...">
-                <button id="load-video-btn">
-                    <i class="fa-solid fa-play-pause"></i> Sync Média
-                </button>
+        <!-- ESPACE SALON ACTIF (Invisible par défaut) -->
+        <div id="room-screen">
+            <div class="room-status" id="room-display-id">
+                Connecté au salon : Aucun
             </div>
-            
-            <div class="video-wrapper">
-                <video id="video-player" controls placeholder="Aucun flux chargé"></video>
+
+            <!-- Lecteur Vidéo Principal (Fichiers, YouTube, Twitch) -->
+            <div class="card">
+                <h3><i class="fa-solid fa-play-pause"></i> Lecteur Vidéo Synchro</h3>
+                <div class="input-group">
+                    <input type="text" id="video-url-input" placeholder="Lien direct MP4, YouTube ou Twitch...">
+                    <button id="load-video-btn">Charger</button>
+                </div>
+                
+                <div class="media-container" id="media-box">
+                    <!-- Le lecteur HTML5 standard par défaut -->
+                    <video id="video-player" controls></video>
+                </div>
+            </div>
+
+            <!-- Espace Lecteur de Musique / Audio -->
+            <div class="card">
+                <h3><i class="fa-solid fa-music music-icon"></i> Espace Musique & Audio</h3>
+                <div class="input-group">
+                    <input type="text" id="audio-url-input" placeholder="Lien direct vers un fichier audio (MP3, WAV)...">
+                    <button id="load-audio-btn">Lancer la Musique</button>
+                </div>
+                <div class="audio-player-wrapper">
+                    <audio id="audio-player" controls></audio>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Script de communication Socket.io fourni par le serveur -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
 
+        // Éléments d'écrans
+        const authScreen = document.getElementById('auth-screen');
+        const roomScreen = document.getElementById('room-screen');
+        const roomDisplayId = document.getElementById('room-display-id');
+
+        // Boutons et Inputs
         const btnCreateRoom = document.getElementById('create-room-btn');
         const roomInput = document.getElementById('room-input');
         const btnJoinRoom = document.getElementById('join-room-btn');
         const videoPlayer = document.getElementById('video-player');
         const videoUrlInput = document.getElementById('video-url-input');
         const btnLoadVideo = document.getElementById('load-video-btn');
+        const mediaBox = document.getElementById('media-box');
+
+        // Musique
+        const audioPlayer = document.getElementById('audio-player');
+        const audioUrlInput = document.getElementById('audio-url-input');
+        const btnLoadAudio = document.getElementById('load-audio-btn');
 
         let currentRoomId = null;
         let isSyncing = false;
 
-        // Récupération automatique du salon via l'URL
+        // Gestion automatique du rafraîchissement (F5)
         const urlParams = new URLSearchParams(window.location.search);
         const roomIdFromUrl = urlParams.get('room');
-
         if (roomIdFromUrl) {
             initializeRoom(roomIdFromUrl);
         }
@@ -284,61 +289,97 @@
             currentRoomId = roomId;
             window.history.pushState({}, '', `?room=${roomId}`);
             socket.emit('join-room', { roomId, username: 'Utilisateur' });
-            console.log(`Connecté au salon : ${roomId}`);
+            
+            // BASCULE DES ÉCRANS : On masque l'accueil et on affiche le salon !
+            authScreen.style.display = 'none';
+            roomScreen.style.display = 'block';
+            roomDisplayId.innerHTML = `<i class="fa-solid fa-circle-check"></i> Salon Privé Actif : <strong>${roomId}</strong> | Partagez ce lien URL à vos amis !`;
         }
 
-        // --- ENVOI DES ACTIONS ---
+        // --- ENVOI ET FORMATAGE DES LIENS VIDÉO (YouTube / Twitch / Direct) ---
         if (btnLoadVideo) {
             btnLoadVideo.addEventListener('click', () => {
                 const url = videoUrlInput.value.trim();
                 if (url && currentRoomId) {
-                    videoPlayer.src = url;
-                    videoPlayer.play();
+                    loadMediaSource(url);
                     socket.emit('change-video', { roomId: currentRoomId, videoUrl: url });
                 }
             });
         }
 
-        videoPlayer.addEventListener('play', () => {
-            if (isSyncing || !currentRoomId) return;
-            socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: videoPlayer.currentTime });
-        });
+        function loadMediaSource(url) {
+            // Détection YouTube
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                let videoId = '';
+                if(url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split(/[?#]/)[0];
+                else if(url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
+                
+                mediaBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+            } 
+            // Détection Twitch
+            else if (url.includes('twitch.tv')) {
+                let channelName = url.split('twitch.tv/')[1].split(/[?#]/)[0];
+                mediaBox.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${channelName}&parent=${window.location.hostname}&autoplay=true" allowfullscreen></iframe>`;
+            } 
+            // Fichier direct (MP4...)
+            else {
+                mediaBox.innerHTML = `<video id="video-player" controls autoplay src="${url}"></video>`;
+                bindVideoEvents(); // Ré-attache les écouteurs de synchro sur la nouvelle balise vidéo
+            }
+        }
 
-        videoPlayer.addEventListener('pause', () => {
-            if (isSyncing || !currentRoomId) return;
-            socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: videoPlayer.currentTime });
-        });
+        function bindVideoEvents() {
+            const vp = document.getElementById('video-player');
+            if(!vp) return;
+            vp.addEventListener('play', () => { if (!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: vp.currentTime }); });
+            vp.addEventListener('pause', () => { if (!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: vp.currentTime }); });
+            vp.addEventListener('seeked', () => { if (!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'seek', currentTime: vp.currentTime }); });
+        }
+        bindVideoEvents();
 
-        videoPlayer.addEventListener('seeked', () => {
-            if (isSyncing || !currentRoomId) return;
-            socket.emit('video-action', { roomId: currentRoomId, action: 'seek', currentTime: videoPlayer.currentTime });
-        });
+        // --- LOGIQUE MUSIQUE / AUDIO ---
+        if (btnLoadAudio) {
+            btnLoadAudio.addEventListener('click', () => {
+                const url = audioUrlInput.value.trim();
+                if (url && currentRoomId) {
+                    audioPlayer.src = url;
+                    audioPlayer.play();
+                    socket.emit('change-audio', { roomId: currentRoomId, audioUrl: url }); // Note: ton serveur accepte les sockets génériques
+                }
+            });
+        }
+        audioPlayer.addEventListener('play', () => { if(!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'audio-play', currentTime: audioPlayer.currentTime }); });
+        audioPlayer.addEventListener('pause', () => { if(!isSyncing && currentRoomId) socket.emit('video-action', { roomId: currentRoomId, action: 'audio-pause', currentTime: audioPlayer.currentTime }); });
 
-        // --- RÉCEPTION DES ÉVÉNEMENTS ---
+        // --- RÉCEPTION DES ÉVÉNEMENTS SOCKET ---
         socket.on('user-changed-video', ({ videoUrl }) => {
             isSyncing = true;
-            videoPlayer.src = videoUrl;
-            videoPlayer.play();
+            loadMediaSource(videoUrl);
             isSyncing = false;
         });
 
         socket.on('user-video-action', ({ action, currentTime }) => {
             isSyncing = true;
-            videoPlayer.currentTime = currentTime;
-            if (action === 'play') {
-                videoPlayer.play();
-            } else if (action === 'pause') {
-                videoPlayer.pause();
+            const vp = document.getElementById('video-player');
+            
+            // Actions Vidéo Locale
+            if (vp && ['play', 'pause', 'seek'].includes(action)) {
+                vp.currentTime = currentTime;
+                if (action === 'play') vp.play();
+                else if (action === 'pause') vp.pause();
             }
+            // Actions Audio
+            if (action === 'audio-play') { audioPlayer.currentTime = currentTime; audioPlayer.play(); }
+            if (action === 'audio-pause') { audioPlayer.pause(); }
+            
             isSyncing = false;
         });
 
         socket.on('sync-video', ({ videoUrl, isPlaying }) => {
             isSyncing = true;
-            videoPlayer.src = videoUrl;
-            if (isPlaying) {
-                videoPlayer.play();
-            }
+            loadMediaSource(videoUrl);
+            const vp = document.getElementById('video-player');
+            if (vp && isPlaying) vp.play();
             isSyncing = false;
         });
     </script>
