@@ -159,7 +159,7 @@
             margin-top: 15px;
         }
 
-        video, iframe {
+        video, iframe, #yt-player-placeholder {
             width: 100%;
             height: 100%;
             border: none;
@@ -209,9 +209,9 @@
             <!-- LECTEUR VIDÉO -->
             <div class="card">
                 <h3><i class="fa-solid fa-play-pause"></i> Lecteur Vidéo Synchro</h3>
-                <span class="hint"><i class="fa-brands fa-youtube"></i> YouTube/Twitch (Synchro au chargement) | <i class="fa-solid fa-file-video"></i> Fichiers locaux et .mp4 (Synchro Live Play/Pause)</span>
+                <span class="hint"><i class="fa-brands fa-youtube"></i> YouTube (Synchro Live PLAY/PAUSE) | <i class="fa-solid fa-file-video"></i> Vidéos MP4 locaux (Synchro Live PLAY/PAUSE)</span>
                 <div class="input-group">
-                    <input type="text" id="video-url-input" placeholder="Lien MP4, /videos/, YouTube, Twitch...">
+                    <input type="text" id="video-url-input" placeholder="Lien MP4, /videos/, URL YouTube...">
                     <button id="load-video-btn">Charger</button>
                 </div>
                 
@@ -235,7 +235,10 @@
         </div>
     </div>
 
+    <!-- Chargement asynchrone de l'API YouTube officielle -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script src="/socket.io/socket.io.js"></script>
+    
     <script>
         const socket = io();
 
@@ -256,6 +259,8 @@
 
         let currentRoomId = null;
         let isSyncing = false;
+        let ytPlayer = null; // Contiendra l'instance du lecteur YouTube API
+        let ytLastState = -1;
 
         const urlParams = new URLSearchParams(window.location.search);
         const roomIdFromUrl = urlParams.get('room');
@@ -297,11 +302,24 @@
         }
 
         function loadMediaSource(url) {
+            ytPlayer = null; // Reset de l'ancien lecteur YouTube si existant
+
             if (url.includes('youtube.com') || url.includes('youtu.be')) {
                 let videoId = '';
                 if(url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split(/[?#]/)[0];
                 else if(url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
-                mediaBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                
+                // On crée une div réceptacle pour l'API YouTube
+                mediaBox.innerHTML = `<div id="yt-player-placeholder"></div>`;
+                
+                // Initialisation du lecteur avec l'API officielle
+                ytPlayer = new YT.Player('yt-player-placeholder', {
+                    videoId: videoId,
+                    playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0 },
+                    events: {
+                        'onStateChange': onYoutubePlayerStateChange
+                    }
+                });
             } 
             else if (url.includes('twitch.tv')) {
                 let channelName = url.split('twitch.tv/')[1].split(/[?#]/)[0];
@@ -311,6 +329,22 @@
                 mediaBox.innerHTML = `<video id="video-player" controls autoplay src="${url}"></video>`;
                 setTimeout(bindVideoEvents, 200); 
             }
+        }
+
+        // Intercepteur d'événements YouTube API
+        function onYoutubePlayerStateChange(event) {
+            if (isSyncing || !currentRoomId || !ytPlayer) return;
+
+            const currentTime = ytPlayer.getCurrentTime();
+            
+            // event.data : 1 = Lecture (PLAY), 2 = Pause (PAUSE)
+            if (event.data === YT.PlayerState.PLAYING && ytLastState !== YT.PlayerState.PLAYING) {
+                socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: currentTime });
+            } 
+            else if (event.data === YT.PlayerState.PAUSED && ytLastState !== YT.PlayerState.PAUSED) {
+                socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: currentTime });
+            }
+            ytLastState = event.data;
         }
 
         function bindVideoEvents() {
@@ -344,11 +378,9 @@
 
         function loadAudioSource(url) {
             if (url.includes('spotify.com')) {
-                // Conversion d'une URL standard Spotify en URL d'intégration fonctionnelle (Embed)
                 let embedUrl = url.replace('spotify.com/', 'spotify.com/embed/');
                 audioBox.innerHTML = `<iframe src="${embedUrl}" width="100%" height="152" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
             } else {
-                // Fallback fichier mp3 direct
                 audioBox.innerHTML = `<audio id="audio-player" controls src="${url}" style="width:100%; display:block;"></audio>`;
                 setTimeout(bindAudioEvents, 200);
             }
@@ -368,7 +400,7 @@
             };
         }
 
-        // --- RECEPTION SOCKETS ---
+        // --- RÉCEPTION SOCKETS ---
         socket.on('user-changed-video', ({ videoUrl }) => {
             loadMediaSource(videoUrl);
         });
@@ -378,17 +410,30 @@
         });
 
         socket.on('user-video-action', ({ action, currentTime }) => {
-            const vp = document.getElementById('video-player');
-            if(!vp) return;
-
             isSyncing = true; 
-            vp.currentTime = currentTime;
-            if (action === 'play') {
-                vp.play().catch(()=>{});
-            } else if (action === 'pause') {
-                vp.pause();
+
+            // Si c'est un lecteur YouTube API
+            if (ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
+                if (Math.abs(ytPlayer.getCurrentTime() - currentTime) > 2) {
+                    ytPlayer.seekTo(currentTime, true);
+                }
+                if (action === 'play') {
+                    ytPlayer.playVideo();
+                } else if (action === 'pause') {
+                    ytPlayer.pauseVideo();
+                }
+            } 
+            // Si c'est un lecteur vidéo classique (.mp4)
+            else {
+                const vp = document.getElementById('video-player');
+                if (vp) {
+                    vp.currentTime = currentTime;
+                    if (action === 'play') vp.play().catch(()=>{});
+                    else if (action === 'pause') vp.pause();
+                }
             }
-            setTimeout(() => { isSyncing = false; }, 150);
+
+            setTimeout(() => { isSyncing = false; }, 300);
         });
 
         socket.on('user-audio-action', ({ action, currentTime }) => {
@@ -397,12 +442,9 @@
 
             isSyncing = true;
             ap.currentTime = currentTime;
-            if (action === 'play') {
-                ap.play().catch(()=>{});
-            } else if (action === 'pause') {
-                ap.pause();
-            }
-            setTimeout(() => { isSyncing = false; }, 150);
+            if (action === 'play') ap.play().catch(()=>{});
+            else if (action === 'pause') ap.pause();
+            setTimeout(() => { isSyncing = false; }, 300);
         });
     </script>
 </body>
