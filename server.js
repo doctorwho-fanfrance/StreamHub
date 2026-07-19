@@ -5,176 +5,190 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-});
+const io = new Server(server);
 
-// Servir les fichiers statiques (index.html, CSS, JS frontend)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rediriger toutes les routes vers index.html pour charger l'interface
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+const roomsData = {};
+const CHAT_COLORS = ['#ff007f', '#00f2fe', '#4facfe', '#00ff87', '#f9d423', '#ff4e50', '#e100ff', '#00ffcc'];
 
-// Stockage en mémoire de l'état des salons
-const rooms = {};
+// Pour stocker les timers des utilisateurs qui actualisent la page
+const disconnectTimeouts = {};
 
 io.on('connection', (socket) => {
-    console.log(`🔌 Nouveau client connecté : ${socket.id}`);
+    console.log(`[Connecté] : ${socket.id}`);
 
-    // --- REJOINDRE OU CRÉER UN SALON ---
     socket.on('join-room', ({ roomId, username }) => {
         socket.join(roomId);
         socket.roomId = roomId;
-        socket.username = username || 'Anonyme';
+        const user = username ? username.trim() : 'Anonyme';
+        socket.username = user;
 
-        // Initialiser les données du salon si c'est la création
-        if (!rooms[roomId]) {
-            rooms[roomId] = {
-                users: [],
-                currentVideo: null,
-                videoState: { currentTime: 0, isPlaying: false }
-            };
+        if (!roomsData[roomId]) {
+            roomsData[roomId] = { playlist: [], users: {}, currentVideo: null };
         }
 
-        // Ajouter l'utilisateur à la liste du salon
-        const userObj = { id: socket.id, username: socket.username };
-        rooms[roomId].users.push(userObj);
-
-        // Notifier les membres du salon
-        io.to(roomId).emit('room-users', rooms[roomId].users);
-        socket.to(roomId).emit('chat-message', {
-            user: 'Système',
-            message: `👋 <strong>${socket.username}</strong> a rejoint le salon !`,
-            isSystem: true
-        });
-
-        // Envoyer la vidéo en cours si elle existe
-        if (rooms[roomId].currentVideo) {
-            socket.emit('change-video', rooms[roomId].currentVideo);
+        // --- GESTION DU RECHARGEMENT (ANTI-SPAM CHAT) ---
+        // On cherche si cet utilisateur était déjà là récemment (même pseudo dans la même room)
+        const alreadyExisted = Object.values(roomsData[roomId].users).find(u => u.username === user);
+        
+        if (alreadyExisted) {
+            // S'il y a un timer de déconnexion en cours pour ce pseudo, on l'annule !
+            if (disconnectTimeouts[alreadyExisted.id]) {
+                clearTimeout(disconnectTimeouts[alreadyExisted.id]);
+                delete disconnectTimeouts[alreadyExisted.id];
+            }
+            // On récupère sa couleur d'origine pour garder une cohérence graphique
+            socket.userColor = alreadyExisted.color;
+            // On supprime l'ancienne entrée temporaire pour mettre la nouvelle à jour
+            delete roomsData[roomId].users[alreadyExisted.id];
+        } else {
+            // Nouvel utilisateur classique
+            socket.userColor = CHAT_COLORS[Math.floor(Math.random() * CHAT_COLORS.length)];
         }
 
-        console.log(`👤 ${socket.username} (${socket.id}) a rejoint ${roomId}`);
-    });
+        roomsData[roomId].users[socket.id] = {
+            id: socket.id,
+            username: user,
+            color: socket.userColor
+        };
 
-    // --- SYNCHRONISATION VIDÉO ---
-    socket.on('change-video', (videoData) => {
-        const roomId = socket.roomId;
-        if (roomId && rooms[roomId]) {
-            rooms[roomId].currentVideo = videoData;
-            socket.to(roomId).emit('change-video', videoData);
+        if (roomsData[roomId].currentVideo) {
+            socket.emit('user-changed-video', roomsData[roomId].currentVideo);
         }
-    });
 
-    socket.on('sync-video', (stateData) => {
-        const roomId = socket.roomId;
-        if (roomId && rooms[roomId]) {
-            rooms[roomId].videoState = stateData;
-            socket.to(roomId).emit('sync-video', stateData);
-        }
-    });
-
-    // --- GESTION DES MINI-JEUX (MORPION & PUISSANCE 4) ---
-    socket.on('game-move', (data) => {
-        const roomId = data.room || socket.roomId;
-        if (roomId) {
-            // Relayer le coup à TOUS les joueurs du salon
-            io.to(roomId).emit('game-move', data);
-        }
-    });
-
-    socket.on('game-reset', (data) => {
-        const roomId = data.room || socket.roomId;
-        if (roomId) {
-            // Recommencer la partie pour tout le monde
-            io.to(roomId).emit('game-reset', data);
-        }
-    });
-
-    // --- GESTION DU CHAT ---
-    socket.on('chat-message', (message) => {
-        const roomId = socket.roomId;
-        if (roomId) {
+        socket.to(roomId).emit('user-joined-webrtc', { id: socket.id, username: user });
+        io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
+        socket.emit('update-playlist', roomsData[roomId].playlist);
+        
+        // On n'envoie le message de bienvenue que si ce n'est pas un simple rafraîchissement de page
+        if (!alreadyExisted) {
             io.to(roomId).emit('chat-message', {
-                user: socket.username,
-                message: message,
-                isSystem: false
+                username: 'Système',
+                message: `${user} a rejoint le salon.`,
+                color: '#9ca3af',
+                isSystem: true
             });
         }
     });
 
-    // --- WEBRTC & SIGNALISATION VISIO ---
-    socket.on('audio-speaking', (data) => {
-        const roomId = socket.roomId;
-        if (roomId) {
-            socket.to(roomId).emit('peer-speaking', { id: socket.id, isSpeaking: data.isSpeaking });
+    socket.on('audio-speaking', ({ isSpeaking }) => {
+        if (socket.roomId) {
+            socket.to(socket.roomId).emit('user-audio-speaking', { id: socket.id, isSpeaking });
         }
+    });
+
+    socket.on('request-sync-force', () => {
+        const roomId = socket.roomId;
+        if (roomId && roomsData[roomId]) {
+            const users = Object.keys(roomsData[roomId].users);
+            if (users.length > 1) {
+                const masterUser = users[0] === socket.id ? users[1] : users[0];
+                io.to(masterUser).emit('get-current-time-for-sync', { requesterId: socket.id });
+            }
+        }
+    });
+
+    socket.on('respond-time-for-sync', ({ requesterId, currentTime, action }) => {
+        io.to(requesterId).emit('user-video-action', { action, currentTime });
     });
 
     socket.on('request-peers-trigger', () => {
         const roomId = socket.roomId;
         if (roomId) {
-            socket.to(roomId).emit('user-joined-webrtc', { peerId: socket.id, username: socket.username });
+            socket.to(roomId).emit('user-joined-webrtc', { id: socket.id, username: socket.username });
         }
     });
 
-    socket.on('webrtc-offer', (data) => {
-        io.to(data.target).emit('webrtc-offer', {
-            sdp: data.sdp,
-            callerId: socket.id,
-            username: socket.username
-        });
+    socket.on('video-offer', ({ sdp, to }) => {
+        socket.to(to).emit('video-offer', { sdp, from: socket.id });
     });
 
-    socket.on('webrtc-answer', (data) => {
-        io.to(data.target).emit('webrtc-answer', {
-            sdp: data.sdp,
-            responderId: socket.id
-        });
+    socket.on('video-answer', ({ sdp, to }) => {
+        socket.to(to).emit('video-answer', { sdp, from: socket.id });
     });
 
-    socket.on('webrtc-ice-candidate', (data) => {
-        io.to(data.target).emit('webrtc-ice-candidate', {
-            candidate: data.candidate,
-            senderId: socket.id
-        });
+    socket.on('new-ice-candidate', ({ candidate, to }) => {
+        socket.to(to).emit('new-ice-candidate', { candidate, from: socket.id });
     });
 
-    // --- DÉCONNEXION ---
+    socket.on('send-chat-message', ({ message }) => {
+        const roomId = socket.roomId;
+        if (roomId && message?.trim()) {
+            io.to(roomId).emit('chat-message', {
+                username: socket.username,
+                message: message.trim(),
+                color: socket.userColor,
+                isSystem: false
+            });
+        }
+    });
+
+    socket.on('video-action', (data) => {
+        if (socket.roomId) socket.to(socket.roomId).emit('user-video-action', data);
+    });
+
+    socket.on('change-video', (data) => {
+        const roomId = socket.roomId;
+        if (roomId && roomsData[roomId]) {
+            roomsData[roomId].currentVideo = data;
+            socket.to(roomId).emit('user-changed-video', data);
+        }
+    });
+
+    socket.on('add-to-playlist', ({ videoUrl }) => {
+        const roomId = socket.roomId;
+        if (roomId && videoUrl) {
+            let title = "Lien Vidéo";
+            if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) title = "Vidéo YouTube";
+            else if (videoUrl.includes('twitch.tv')) title = "Stream Twitch";
+            else title = videoUrl.split('/').pop().split('?')[0] || "Fichier MP4";
+
+            const newItem = { id: Math.random().toString(36).substring(2, 7), url: videoUrl, title };
+            roomsData[roomId].playlist.push(newItem);
+            io.to(roomId).emit('update-playlist', roomsData[roomId].playlist);
+        }
+    });
+
+    socket.on('remove-from-playlist', ({ itemId }) => {
+        const roomId = socket.roomId;
+        if (roomId && roomsData[roomId]) {
+            roomsData[roomId].playlist = roomsData[roomId].playlist.filter(item => item.id !== itemId);
+            io.to(roomId).emit('update-playlist', roomsData[roomId].playlist);
+        }
+    });
+
     socket.on('disconnect', () => {
         const roomId = socket.roomId;
-        if (roomId && rooms[roomId]) {
-            // Retirer l'utilisateur de la mémoire
-            rooms[roomId].users = rooms[roomId].users.filter(u => u.id !== socket.id);
-            
-            // Informer les autres membres
-            io.to(roomId).emit('room-users', rooms[roomId].users);
-            io.to(roomId).emit('user-disconnected-webrtc', { peerId: socket.id });
-            socket.to(roomId).emit('chat-message', {
-                user: 'Système',
-                message: `🚪 <strong>${socket.username}</strong> a quitté le salon.`,
-                isSystem: true
-            });
+        const socketId = socket.id;
 
-            // Nettoyer la room si elle est vide
-            if (rooms[roomId].users.length === 0) {
-                delete rooms[roomId];
+        if (roomId && roomsData[roomId]) {
+            const userData = roomsData[roomId].users[socketId];
+
+            if (userData) {
+                // On met l'utilisateur en "sursis" pendant 2.5 secondes avant de l'effacer définitivement
+                disconnectTimeouts[socketId] = setTimeout(() => {
+                    if (roomsData[roomId] && roomsData[roomId].users[socketId]) {
+                        delete roomsData[roomId].users[socketId];
+                        
+                        socket.to(roomId).emit('user-left-webrtc', { id: socketId });
+                        io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
+
+                        io.to(roomId).emit('chat-message', {
+                            username: 'Système',
+                            message: `${userData.username} a quitté le salon.`,
+                            color: '#9ca3af',
+                            isSystem: true
+                        });
+
+                        if (Object.keys(roomsData[roomId].users).length === 0) delete roomsData[roomId];
+                    }
+                    delete disconnectTimeouts[socketId];
+                }, 2500); // 2.5 secondes laissent largement le temps à un F5 de s'exécuter
             }
         }
-        console.log(`❌ Client déconnecté : ${socket.id}`);
     });
 });
 
-// Lancement du serveur sur le port 3000
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`
-🚀 Serveur StreamHub démarré avec succès !
-📡 URL locale : http://localhost:${PORT}
-🎮 Modules actifs : Synchro Vidéo, Chat, Visio WebRTC, Morpion, Puissance 4
-    `);
-});
+server.listen(PORT, () => console.log(`Serveur actif sur le port ${PORT}`));

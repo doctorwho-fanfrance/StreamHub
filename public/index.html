@@ -74,7 +74,6 @@
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--card-border); padding: 25px; border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-            margin-bottom: 20px;
         }
         .card:hover { border-color: rgba(138, 43, 226, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px var(--accent-glow); }
         .card h3 { margin: 0 0 18px 0; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 12px; color: #fff; }
@@ -151,7 +150,7 @@
             max-width: 85%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* Badges & Rôles */
+        /* Badges & Rôles (Crown/Admin) */
         .users-badge { background: linear-gradient(45deg, #00f2fe, #4facfe); color: #000; padding: 2px 9px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; margin-left: auto; }
         .user-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: 12px; max-height: 75px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.02); }
         .user-tag { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
@@ -197,27 +196,6 @@
         .playlist-actions { display: flex; gap: 6px; }
         .playlist-item button { padding: 6px 10px; font-size: 0.75rem; border-radius: 8px; box-shadow: none; }
         .empty-playlist { color: var(--text-muted); font-size: 0.85rem; font-style: italic; text-align: center; padding: 15px; }
-
-        /* --- STYLES MINI-JEUX INTEGRÉS --- */
-        .game-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .game-tab-btn { flex: 1; padding: 8px; font-size: 0.85rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: none; }
-        .game-tab-btn.active { background: var(--primary-gradient); border-color: transparent; }
-        
-        .game-status-bar { text-align: center; font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; color: #00f2fe; }
-
-        /* Grid Morpion */
-        .morpion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 260px; margin: 0 auto; }
-        .morpion-cell { aspect-ratio: 1; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; cursor: pointer; }
-        .morpion-cell:hover { background: rgba(255, 255, 255, 0.08); }
-        .morpion-cell.x { color: #ff007f; text-shadow: 0 0 10px rgba(255,0,127,0.5); }
-        .morpion-cell.o { color: #00f2fe; text-shadow: 0 0 10px rgba(0,242,254,0.5); }
-
-        /* Grid Puissance 4 */
-        .p4-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .p4-cell { aspect-ratio: 1; background: rgba(255, 255, 255, 0.05); border-radius: 50%; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .p4-cell:hover { background: rgba(255, 255, 255, 0.15); }
-        .p4-cell.red { background: #ff4e50; box-shadow: 0 0 10px rgba(255,78,80,0.6); }
-        .p4-cell.yellow { background: #f9d423; box-shadow: 0 0 10px rgba(249,212,35,0.6); }
     </style>
 </head>
 <body>
@@ -274,48 +252,13 @@
                     </div>
                 </div>
 
-                <!-- Colonne Droite : Widgets de communication, jeux et listes -->
+                <!-- Colonne Droite : Widgets de communication et listes -->
                 <div class="right-col">
                     <!-- Section Visio Caméra -->
                     <div class="card">
                         <h3><i class="fa-solid fa-video"></i> Salons Caméras / Audio</h3>
                         <button id="toggle-cam-btn" class="btn-block btn-webrtc"><i class="fa-solid fa-camera"></i> Activer ma Caméra & Micro</button>
                         <div class="video-grid" id="video-grid"></div>
-                    </div>
-
-                    <!-- NOUVELLE SECTION: MINI-JEUX (Morpion & Puissance 4) -->
-                    <div class="card">
-                        <h3><i class="fa-solid fa-gamepad"></i> Arcade Synchro</h3>
-                        <div class="game-tabs">
-                            <button class="game-tab-btn active" id="tab-morpion">Morpion</button>
-                            <button class="game-tab-btn" id="tab-p4">Puissance 4</button>
-                        </div>
-
-                        <div class="game-status-bar" id="game-status">Au tour de X</div>
-
-                        <!-- Jeu Morpion -->
-                        <div id="morpion-view">
-                            <div class="morpion-grid" id="morpion-board">
-                                <div class="morpion-cell" data-index="0"></div>
-                                <div class="morpion-cell" data-index="1"></div>
-                                <div class="morpion-cell" data-index="2"></div>
-                                <div class="morpion-cell" data-index="3"></div>
-                                <div class="morpion-cell" data-index="4"></div>
-                                <div class="morpion-cell" data-index="5"></div>
-                                <div class="morpion-cell" data-index="6"></div>
-                                <div class="morpion-cell" data-index="7"></div>
-                                <div class="morpion-cell" data-index="8"></div>
-                            </div>
-                        </div>
-
-                        <!-- Jeu Puissance 4 -->
-                        <div id="p4-view" style="display: none;">
-                            <div class="p4-grid" id="p4-board"></div>
-                        </div>
-
-                        <button id="reset-game-btn" class="btn-secondary btn-block" style="margin-top: 15px;">
-                            <i class="fa-solid fa-rotate-right"></i> Réinitialiser la partie
-                        </button>
                     </div>
 
                     <!-- Section Chat Room -->
@@ -388,9 +331,10 @@
         const emojiPicker = document.getElementById('emoji-picker');
 
         let currentRoomId = null;
+        let isSyncing = false;
         let ytPlayer = null;
         let twitchPlayer = null;
-        let playlist = [];
+        let ytLastState = -1;
         
         let localStream = null;
         let peerConnections = {};
@@ -400,7 +344,7 @@
         let speechInterval = null;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        // --- SOUND SYSTEM ---
+        // --- GÉNÉRATEUR SYSTÈME DE NOTIFICATIONS SONORES (Discret & High-tech) ---
         function playSystemSound(type) {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -410,32 +354,45 @@
                 gain.connect(ctx.destination);
 
                 if (type === 'message') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                    // Petit "bip" court et cristallin
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // Ré5
                     gain.gain.setValueAtTime(0.08, ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
                     osc.start(); osc.stop(ctx.currentTime + 0.12);
                 } else if (type === 'join') {
-                    osc.type = 'triangle'; osc.frequency.setValueAtTime(440, ctx.currentTime);
-                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+                    // Double note montante harmonieuse
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, ctx.currentTime); // La4
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // Mi5
                     gain.gain.setValueAtTime(0.06, ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
                     osc.start(); osc.stop(ctx.currentTime + 0.25);
                 }
-            } catch (e) {}
+            } catch (e) { console.log("Audio bloqué par le navigateur tant qu'on clique pas."); }
         }
 
-        // --- EMOJI PICKER ---
-        emojiBtn.addEventListener('click', (e) => { e.stopPropagation(); emojiPicker.classList.toggle('active'); });
+        // --- GESTION DU SÉLECTEUR D'EMOJIS ---
+        emojiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            emojiPicker.classList.toggle('active');
+        });
         document.querySelectorAll('.emoji-item').forEach(item => {
             item.addEventListener('click', () => {
-                chatInput.value += item.innerText; chatInput.focus(); emojiPicker.classList.remove('active');
+                chatInput.value += item.innerText;
+                chatInput.focus();
+                emojiPicker.classList.remove('active');
             });
         });
         document.addEventListener('click', () => emojiPicker.classList.remove('active'));
 
-        // Profile & Room Init
+        // Profil & Persistance
         const savedUsername = localStorage.getItem('streamhub_username');
-        usernameInput.value = savedUsername || 'Invité_' + Math.floor(Math.random() * 1000);
+        if (savedUsername) {
+            usernameInput.value = savedUsername;
+        } else {
+            usernameInput.value = 'Invité_' + Math.floor(Math.random() * 1000);
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         const urlRoomId = urlParams.get('room');
@@ -454,164 +411,25 @@
             authScreen.style.display = 'none';
             roomScreen.style.display = 'block';
             roomDisplayId.innerHTML = `<i class="fa-solid fa-hashtag"></i> ID unique du salon : <strong style="color:#00f2fe">${roomId}</strong>`;
-            
-            initP4BoardHTML();
         }
 
-        // --- LOGIQUE MINI-JEUX (MORPION & PUISSANCE 4) ---
-        let activeGame = 'morpion';
-        let morpionState = Array(9).fill(null);
-        let morpionTurn = 'X';
-        let morpionGameOver = false;
-
-        let p4Board = Array(6).fill(null).map(() => Array(7).fill(null));
-        let p4Turn = 'red';
-        let p4GameOver = false;
-
-        const tabMorpion = document.getElementById('tab-morpion');
-        const tabP4 = document.getElementById('tab-p4');
-        const morpionView = document.getElementById('morpion-view');
-        const p4View = document.getElementById('p4-view');
-        const gameStatus = document.getElementById('game-status');
-        const resetGameBtn = document.getElementById('reset-game-btn');
-
-        tabMorpion.addEventListener('click', () => {
-            activeGame = 'morpion';
-            tabMorpion.classList.add('active'); tabP4.classList.remove('active');
-            morpionView.style.display = 'block'; p4View.style.display = 'none';
-            updateGameStatus();
-        });
-
-        tabP4.addEventListener('click', () => {
-            activeGame = 'p4';
-            tabP4.classList.add('active'); tabMorpion.classList.remove('active');
-            p4View.style.display = 'block'; morpionView.style.display = 'none';
-            updateGameStatus();
-        });
-
-        function updateGameStatus() {
-            if (activeGame === 'morpion') {
-                gameStatus.innerText = morpionGameOver ? "Fin de la partie Morpion !" : `Au tour de : ${morpionTurn}`;
-            } else {
-                gameStatus.innerText = p4GameOver ? "Fin du Puissance 4 !" : `Au tour du joueur : ${p4Turn === 'red' ? 'Rouge 🔴' : 'Jaune 🟡'}`;
-            }
-        }
-
-        // --- MORPION INTERACTION ---
-        document.querySelectorAll('.morpion-cell').forEach(cell => {
-            cell.addEventListener('click', () => {
-                const idx = parseInt(cell.getAttribute('data-index'));
-                if (!morpionState[idx] && !morpionGameOver) {
-                    socket.emit('game-move', { room: currentRoomId, game: 'morpion', index: idx, turn: morpionTurn });
-                }
-            });
-        });
-
-        function checkMorpionWin(state) {
-            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            for (let w of wins) {
-                if (state[w[0]] && state[w[0]] === state[w[1]] && state[w[0]] === state[w[2]]) return state[w[0]];
-            }
-            return state.includes(null) ? null : 'TIE';
-        }
-
-        // --- PUISSANCE 4 INTERACTION ---
-        function initP4BoardHTML() {
-            const boardContainer = document.getElementById('p4-board');
-            boardContainer.innerHTML = '';
-            for (let r = 0; r < 6; r++) {
-                for (let c = 0; c < 7; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'p4-cell';
-                    cell.dataset.col = c;
-                    cell.dataset.row = r;
-                    cell.addEventListener('click', () => handleP4Click(c));
-                    boardContainer.appendChild(cell);
-                }
-            }
-        }
-
-        function handleP4Click(col) {
-            if (p4GameOver) return;
-            socket.emit('game-move', { room: currentRoomId, game: 'p4', col: col, turn: p4Turn });
-        }
-
-        function checkP4Win(board, r, c, color) {
-            function count(dx, dy) {
-                let cnt = 0, i = r + dx, j = c + dy;
-                while (i >= 0 && i < 6 && j >= 0 && j < 7 && board[i][j] === color) { cnt++; i += dx; j += dy; }
-                return cnt;
-            }
-            return (count(1,0)+count(-1,0)>=3) || (count(0,1)+count(0,-1)>=3) || (count(1,1)+count(-1,-1)>=3) || (count(1,-1)+count(-1,1)>=3);
-        }
-
-        // --- RECEPTION DU SERVEUR POUR LES JEUX ---
-        socket.on('game-move', (data) => {
-            if (data.game === 'morpion') {
-                morpionState[data.index] = data.turn;
-                const cell = document.querySelector(`.morpion-cell[data-index="${data.index}"]`);
-                cell.innerText = data.turn;
-                cell.classList.add(data.turn.toLowerCase());
-                
-                const winner = checkMorpionWin(morpionState);
-                if (winner) {
-                    morpionGameOver = true;
-                    gameStatus.innerText = winner === 'TIE' ? "Égalité parfaite !" : `Victoire de ${winner} ! 🎉`;
-                } else {
-                    morpionTurn = data.turn === 'X' ? 'O' : 'X';
-                    updateGameStatus();
-                }
-            } else if (data.game === 'p4') {
-                const col = data.col;
-                for (let r = 5; r >= 0; r--) {
-                    if (!p4Board[r][col]) {
-                        p4Board[r][col] = data.turn;
-                        const cell = document.querySelector(`.p4-cell[data-row="${r}"][data-col="${col}"]`);
-                        cell.classList.add(data.turn);
-                        
-                        if (checkP4Win(p4Board, r, col, data.turn)) {
-                            p4GameOver = true;
-                            gameStatus.innerText = `Victoire du joueur ${data.turn === 'red' ? 'Rouge 🔴' : 'Jaune 🟡'} !`;
-                        } else {
-                            p4Turn = data.turn === 'red' ? 'yellow' : 'red';
-                            updateGameStatus();
-                        }
-                        break;
-                    }
-                }
-            }
-        });
-
-        resetGameBtn.addEventListener('click', () => {
-            socket.emit('game-reset', { room: currentRoomId, game: activeGame });
-        });
-
-        socket.on('game-reset', (data) => {
-            if (data.game === 'morpion') {
-                morpionState = Array(9).fill(null);
-                morpionTurn = 'X'; morpionGameOver = false;
-                document.querySelectorAll('.morpion-cell').forEach(c => { c.innerText = ''; c.className = 'morpion-cell'; });
-            } else {
-                p4Board = Array(6).fill(null).map(() => Array(7).fill(null));
-                p4Turn = 'red'; p4GameOver = false;
-                initP4BoardHTML();
-            }
-            updateGameStatus();
-        });
-
-        // --- WEBRTC LOGIC ---
+        // --- GESTION PAROLE & WEBRTC ---
         function startSpeechDetection(stream) {
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
                 microphone = audioContext.createMediaStreamSource(stream);
-                microphone.connect(analyser); analyser.fftSize = 512;
-                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                microphone.connect(analyser);
+                analyser.fftSize = 512;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
                 let wasSpeaking = false;
 
                 speechInterval = setInterval(() => {
                     analyser.getByteFrequencyData(dataArray);
-                    let average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) { sum += dataArray[i]; }
+                    let average = sum / bufferLength;
                     let isSpeaking = average > 25; 
                     if (isSpeaking !== wasSpeaking) {
                         wasSpeaking = isSpeaking;
@@ -620,18 +438,29 @@
                         socket.emit('audio-speaking', { isSpeaking });
                     }
                 }, 150);
-            } catch (e) {}
+            } catch (e) { console.error(e); }
+        }
+
+        function stopSpeechDetection() {
+            if (speechInterval) clearInterval(speechInterval);
+            if (microphone) microphone.disconnect();
+            if (audioContext) audioContext.close();
         }
 
         btnToggleCam.addEventListener('click', async () => {
             if (localStream) {
-                if (speechInterval) clearInterval(speechInterval);
+                stopSpeechDetection();
                 localStream.getTracks().forEach(track => track.stop());
                 localStream = null;
                 const localBox = document.getElementById('local-video-box');
                 if (localBox) localBox.remove();
                 btnToggleCam.innerHTML = `<i class="fa-solid fa-camera"></i> Activer ma Caméra & Micro`;
                 btnToggleCam.classList.remove('btn-danger');
+                Object.keys(peerConnections).forEach(id => {
+                    peerConnections[id].close(); delete peerConnections[id];
+                    const remoteBox = document.getElementById(`video-${id}`);
+                    if (remoteBox) remoteBox.remove();
+                });
             } else {
                 try {
                     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -640,7 +469,7 @@
                     btnToggleCam.classList.add('btn-danger');
                     startSpeechDetection(localStream);
                     socket.emit('request-peers-trigger'); 
-                } catch (err) { alert("Accès matériel refusé."); }
+                } catch (err) { alert("Accès matériel refusé ou indisponible."); }
             }
         });
 
@@ -655,11 +484,50 @@
             }
         }
 
-        // --- MEDIA PLAYER & LECTEUR ---
+        function initPeerConnection(userId, username, initiateCall = false) {
+            if (peerConnections[userId]) return peerConnections[userId];
+            const pc = new RTCPeerConnection(rtcConfig);
+            peerConnections[userId] = pc;
+            if (localStream) localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            pc.ontrack = (e) => createVideoWrapper(`video-${userId}`, username, e.streams[0], false);
+            pc.onicecandidate = (e) => e.candidate && socket.emit('new-ice-candidate', { candidate: e.candidate, to: userId });
+            if (initiateCall && localStream) {
+                pc.createOffer().then(o => pc.setLocalDescription(o)).then(() => socket.emit('video-offer', { sdp: pc.localDescription, to: userId }));
+            }
+            return pc;
+        }
+
+        socket.on('user-joined-webrtc', ({ id, username }) => localStream && initPeerConnection(id, username, true));
+        socket.on('video-offer', async ({ sdp, from }) => {
+            const pc = initPeerConnection(from, 'Ami', false); await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+            const a = await pc.createAnswer(); await pc.setLocalDescription(a);
+            socket.emit('video-answer', { sdp: pc.localDescription, to: from });
+        });
+        socket.on('video-answer', async ({ sdp, from }) => peerConnections[from] && await peerConnections[from].setRemoteDescription(new RTCSessionDescription(sdp)));
+        socket.on('new-ice-candidate', async ({ candidate, from }) => peerConnections[from] && await peerConnections[from].addIceCandidate(new RTCIceCandidate(candidate)));
+        socket.on('user-left-webrtc', ({ id }) => { if(peerConnections[id]) { peerConnections[id].close(); delete peerConnections[id]; } const el = document.getElementById(`video-${id}`); if(el) el.remove(); });
+        socket.on('user-audio-speaking', ({ id, isSpeaking }) => { const rb = document.getElementById(`video-${id}`); if (rb) isSpeaking ? rb.classList.add('speaking') : rb.classList.remove('speaking'); });
+
+        // --- CODE LECTEUR & LOGIQUE INTERNE ---
+        btnSyncForce.addEventListener('click', () => socket.emit('request-sync-force'));
+        socket.on('get-current-time-for-sync', ({ requesterId }) => {
+            let currentTime = 0, action = 'pause';
+            if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+                currentTime = ytPlayer.getCurrentTime(); action = ytPlayer.getPlayerState() === 1 ? 'play' : 'pause';
+            } else if (twitchPlayer) {
+                currentTime = twitchPlayer.getCurrentTime(); action = 'play';
+            } else {
+                const vp = document.getElementById('video-player'); if (vp) { currentTime = vp.currentTime; action = vp.paused ? 'pause' : 'play'; }
+            }
+            socket.emit('respond-time-for-sync', { requesterId, currentTime, action });
+        });
+
         btnLoadVideo.addEventListener('click', () => {
             const url = videoUrlInput.value.trim();
             if (url) {
-                let type = url.includes('youtube.com') || url.includes('youtu.be') ? 'youtube' : (url.includes('twitch.tv') ? 'twitch' : 'mp4');
+                let type = 'mp4';
+                if (url.includes('youtube.com') || url.includes('youtu.be')) type = 'youtube';
+                else if (url.includes('twitch.tv')) type = 'twitch';
                 const videoData = { type, url };
                 loadMediaSource(videoData);
                 socket.emit('change-video', videoData);
@@ -667,42 +535,98 @@
         });
 
         function loadMediaSource(videoData) {
+            ytPlayer = null; twitchPlayer = null;
             const { type, url } = videoData;
-            mediaBox.innerHTML = '';
             if (type === 'youtube') {
-                const reg = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                const match = url.match(reg);
-                const id = (match && match[2].length === 11) ? match[2] : null;
-                const placeholder = document.createElement('div'); placeholder.id = 'yt-player-placeholder';
-                mediaBox.appendChild(placeholder);
-                ytPlayer = new YT.Player('yt-player-placeholder', { videoId: id, playerVars: { 'autoplay': 1, 'controls': 1 } });
+                let videoId = url.includes('youtu.be/') ? url.split('youtu.be/')[1].split(/[?#]/)[0] : url.split('v=')[1].split('&')[0];
+                mediaBox.innerHTML = `<div id="yt-player-placeholder"></div>`;
+                ytPlayer = new YT.Player('yt-player-placeholder', {
+                    videoId: videoId, playerVars: { 'autoplay': 1, 'controls': 1 },
+                    events: {
+                        'onStateChange': (e) => {
+                            if (isSyncing) return;
+                            if (e.data === 1 && ytLastState !== 1) socket.emit('video-action', { action: 'play', currentTime: ytPlayer.getCurrentTime() });
+                            if (e.data === 2 && ytLastState !== 2) socket.emit('video-action', { action: 'pause', currentTime: ytPlayer.getCurrentTime() });
+                            ytLastState = e.data;
+                        },
+                        'onReady': (e) => e.target.setVolume(videoVolumeSlider.value)
+                    }
+                });
+            } else if (type === 'twitch') {
+                let channelName = url.split('twitch.tv/')[1].split(/[?#]/)[0];
+                mediaBox.innerHTML = `<div id="twitch-player"></div>`;
+                twitchPlayer = new Twitch.Player("twitch-player", { channel: channelName, width: "100%", height: "100%", autoplay: true });
+                twitchPlayer.setVolume(videoVolumeSlider.value / 100);
             } else {
-                const videoEl = document.createElement('video');
-                videoEl.id = 'video-player'; videoEl.src = url; videoEl.controls = true; videoEl.autoplay = true;
-                mediaBox.appendChild(videoEl);
+                mediaBox.innerHTML = `<video id="video-player" controls autoplay src="${url}"></video>`;
+                setTimeout(() => {
+                    const vp = document.getElementById('video-player');
+                    if(vp) {
+                        vp.volume = videoVolumeSlider.value / 100;
+                        vp.onplay = () => !isSyncing && socket.emit('video-action', { action: 'play', currentTime: vp.currentTime });
+                        vp.onpause = () => !isSyncing && socket.emit('video-action', { action: 'pause', currentTime: vp.currentTime });
+                    }
+                }, 200);
             }
         }
 
-        // --- CHAT & PLAYLIST LOGIC ---
-        btnSendChat.addEventListener('click', sendChatMessage);
-        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
-
-        function sendChatMessage() {
-            const msg = chatInput.value.trim();
-            if (msg) { socket.emit('chat-message', msg); chatInput.value = ''; }
-        }
-
-        socket.on('chat-message', ({ user, message, isSystem }) => {
-            const msgEl = document.createElement('div');
-            msgEl.className = isSystem ? 'chat-msg system' : 'chat-msg';
-            msgEl.innerHTML = isSystem ? message : `<span class="name" style="color:#00f2fe">${user}:</span> ${message}`;
-            chatMessages.appendChild(msgEl);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+        videoVolumeSlider.addEventListener('input', (e) => {
+            const vol = e.target.value; const vp = document.getElementById('video-player');
+            if (vp) vp.volume = vol / 100;
+            if (ytPlayer && typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(vol);
+            if (twitchPlayer && typeof twitchPlayer.setVolume === 'function') twitchPlayer.setVolume(vol / 100);
         });
 
-        socket.on('room-users', (users) => {
-            userCount.innerText = users.length;
-            usersContainer.innerHTML = users.map(u => `<div class="user-tag">${u.username}</div>`).join('');
+        socket.on('user-changed-video', (videoData) => loadMediaSource(videoData));
+        socket.on('user-video-action', ({ action, currentTime }) => {
+            isSyncing = true;
+            if (ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
+                if (Math.abs(ytPlayer.getCurrentTime() - currentTime) > 2) ytPlayer.seekTo(currentTime, true);
+                action === 'play' ? ytPlayer.playVideo() : ytPlayer.pauseVideo();
+            } else if (twitchPlayer) {
+                if(action === 'play' && twitchPlayer.isPaused()) twitchPlayer.play();
+            } else {
+                const vp = document.getElementById('video-player');
+                if (vp) { vp.currentTime = currentTime; action === 'play' ? vp.play().catch(()=>{}) : vp.pause(); }
+            }
+            setTimeout(() => isSyncing = false, 400);
+        });
+
+        // --- COMPOSANTS AUXILIAIRES ---
+        function launchFromPlaylist(url, id) {
+            let type = 'mp4'; if (url.includes('youtube.com') || url.includes('youtu.be')) type = 'youtube'; else if (url.includes('twitch.tv')) type = 'twitch';
+            const videoData = { type, url }; loadMediaSource(videoData); socket.emit('change-video', videoData); socket.emit('remove-from-playlist', { itemId: id });
+        }
+        function sendChatMessage() { const msg = chatInput.value.trim(); if (msg) { socket.emit('send-chat-message', { message: msg }); chatInput.value = ''; } }
+        btnSendChat.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
+        btnAddPlaylist.addEventListener('click', () => { const url = playlistUrlInput.value.trim(); if (url) { socket.emit('add-to-playlist', { videoUrl: url }); playlistUrlInput.value = ''; } });
+        
+        socket.on('update-users', (list) => { 
+            userCount.innerText = list.length; usersContainer.innerHTML = ''; 
+            list.forEach((u, index) => { 
+                // Le premier utilisateur de la liste (index 0) est désigné Admin de session
+                const roleBadge = index === 0 ? `<span class="badge-admin"><i class="fa-solid fa-crown"></i> Admin</span>` : '';
+                usersContainer.innerHTML += `<div class="user-tag" style="border-color: ${u.color}44;">${roleBadge}<i class="fa-solid fa-circle" style="color: ${u.color}; font-size: 0.5rem;"></i> ${u.username}</div>`; 
+            }); 
+        });
+        
+        socket.on('chat-message', ({ username, message, color, isSystem }) => { 
+            if (isSystem) {
+                chatMessages.innerHTML += `<div class="chat-msg system"><i class="fa-solid fa-robot"></i> ${message}</div>`;
+                playSystemSound('join'); // Son d'événement / connexion
+            } else {
+                // Détecter si le message vient de l'Admin (on simule ici via la couleur ou un tag système pour l'exemple)
+                chatMessages.innerHTML += `<div class="chat-msg"><span class="name" style="color: ${color};">${username}:</span>${message}</div>`; 
+                playSystemSound('message'); // Son de message reçu
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight; 
+        });
+        
+        socket.on('update-playlist', (pl) => { 
+            playlistContainer.innerHTML = ''; 
+            if (pl.length === 0) { playlistContainer.innerHTML = '<div class="empty-playlist">Aucune vidéo en attente</div>'; return; } 
+            pl.forEach((item, idx) => { playlistContainer.innerHTML += `<div class="playlist-item"><span class="title-text"><strong>#${idx+1}</strong> ${item.title}</span><div class="playlist-actions"><button class="btn-success" onclick="launchFromPlaylist('${item.url}', '${item.id}')"><i class="fa-solid fa-play"></i></button><button class="btn-danger" onclick="socket.emit('remove-from-playlist', { itemId: '${item.id}' })"><i class="fa-solid fa-trash"></i></button></div></div>`; }); 
         });
     </script>
 </body>
