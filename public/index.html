@@ -16,6 +16,7 @@
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
             --glow: 0 0 20px rgba(138, 43, 226, 0.4);
+            --twitch-color: #9146FF;
         }
 
         body {
@@ -60,7 +61,6 @@
         }
         .card h3 { margin: 0 0 10px 0; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; }
         .card h3 i { color: #ff007f; }
-        .hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; display: block; }
         
         .input-group { display: flex; gap: 8px; margin-bottom: 12px; }
         input {
@@ -79,29 +79,36 @@
         .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
         .btn-danger { background: linear-gradient(135deg, #ff0055 0%, #990033 100%); }
         .btn-webrtc { background: #00f2fe; color: #000; font-weight: 700; margin-bottom: 10px; }
+        .btn-sync { background: linear-gradient(135deg, #f12711, #f5af19); color: white; font-weight: 700; margin-top: 10px; }
 
         /* VIDÉO LECTEUR */
         .media-container {
             position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
             border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); margin-top: 10px;
         }
-        video, iframe, #yt-player-placeholder { width: 100%; height: 100%; border: none; display: block; }
+        video, iframe, #yt-player-placeholder, #twitch-player { width: 100%; height: 100%; border: none; display: block; }
 
-        .volume-control {
-            display: flex; align-items: center; gap: 12px; margin-top: 12px;
-            background: rgba(255, 255, 255, 0.04); padding: 6px 14px; border-radius: 8px; width: fit-content;
+        .player-controls {
+            display: flex; align-items: center; justify-content: space-between; margin-top: 12px;
+            background: rgba(255, 255, 255, 0.04); padding: 8px 14px; border-radius: 8px;
         }
+        .volume-control { display: flex; align-items: center; gap: 12px; }
         .volume-slider { -webkit-appearance: none; width: 110px; height: 4px; background: rgba(255, 255, 255, 0.2); outline: none; }
         .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-primary); }
 
-        /* DESIGN GRILLE DES CAMÉRAS (WEBRTC) */
+        /* DESIGN GRILLE DES CAMÉRAS & INDICATEUR DE PAROLE */
         .video-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
             gap: 10px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 12px;
         }
         .video-wrapper {
             position: relative; aspect-ratio: 4 / 3; background: #1a1a2e; border-radius: 8px; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.1); transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        /* Style quand l'utilisateur parle */
+        .video-wrapper.speaking {
+            border-color: #00ff87 !important;
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.6);
         }
         .video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
         .video-wrapper .name-label {
@@ -110,7 +117,7 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        /* Users & Chat & Playlist */
+        /* Users, Chat & Playlist */
         .users-badge { background: #00f2fe; color: #000; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; }
         .user-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; padding: 8px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; max-height: 60px; overflow-y: auto; }
         .user-tag { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; }
@@ -160,17 +167,22 @@
                 <!-- GAUCHE : LECTEUR VIDÉO -->
                 <div class="left-col">
                     <div class="card">
-                        <h3><i class="fa-solid fa-play-pause"></i> Lecteur Vidéo Synchro</h3>
+                        <h3><i class="fa-solid fa-play-pause"></i> Lecteur Synchro (YouTube, Twitch, MP4)</h3>
                         <div class="input-group">
-                            <input type="text" id="video-url-input" placeholder="Lien MP4 ou URL YouTube...">
+                            <input type="text" id="video-url-input" placeholder="Lien MP4, YouTube ou Chaîne Twitch...">
                             <button id="load-video-btn">Charger</button>
                         </div>
                         <div class="media-container" id="media-box">
                             <video id="video-player" controls></video>
                         </div>
-                        <div class="volume-control">
-                            <i class="fa-solid fa-volume-high"></i>
-                            <input type="range" id="video-volume" class="volume-slider" min="0" max="100" value="100">
+                        
+                        <div class="player-controls">
+                            <div class="volume-control">
+                                <i class="fa-solid fa-volume-high"></i>
+                                <input type="range" id="video-volume" class="volume-slider" min="0" max="100" value="100">
+                            </div>
+                            <!-- LE BOUTON SYNC RE-FORCE -->
+                            <button id="sync-force-btn" class="btn-sync"><i class="fa-solid fa-rotate"></i> Forcer la synchro</button>
                         </div>
                     </div>
                 </div>
@@ -181,9 +193,7 @@
                     <div class="card">
                         <h3><i class="fa-solid fa-video"></i> Caméras en direct</h3>
                         <button id="toggle-cam-btn" class="btn-block btn-webrtc"><i class="fa-solid fa-camera"></i> Activer ma Caméra/Micro</button>
-                        <div class="video-grid" id="video-grid">
-                            <!-- Les caméras s'insèrent ici -->
-                        </div>
+                        <div class="video-grid" id="video-grid"></div>
                     </div>
 
                     <!-- CHAT -->
@@ -213,7 +223,9 @@
         </div>
     </div>
 
+    <!-- SCRIPTS EMBEDS APIS -->
     <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://player.twitch.tv/js/embed/v1.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
@@ -230,6 +242,7 @@
         const btnLoadVideo = document.getElementById('load-video-btn');
         const mediaBox = document.getElementById('media-box');
         const videoVolumeSlider = document.getElementById('video-volume');
+        const btnSyncForce = document.getElementById('sync-force-btn');
         const userCount = document.getElementById('user-count');
         const usersContainer = document.getElementById('users-container');
         const chatMessages = document.getElementById('chat-messages');
@@ -238,24 +251,25 @@
         const playlistUrlInput = document.getElementById('playlist-url-input');
         const btnAddPlaylist = document.getElementById('add-playlist-btn');
         const playlistContainer = document.getElementById('playlist-container');
-        
-        // Dom Elements WebRTC
         const btnToggleCam = document.getElementById('toggle-cam-btn');
         const videoGrid = document.getElementById('video-grid');
 
         let currentRoomId = null;
         let isSyncing = false;
         let ytPlayer = null;
+        let twitchPlayer = null;
         let ytLastState = -1;
         
-        // Variables WebRTC
+        // WebRTC & Audio Detect (Indicateur de parole)
         let localStream = null;
-        let peerConnections = {}; // Stocke les connexions { socketId: RTCPeerConnection }
+        let peerConnections = {};
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let speechInterval = null;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('room')) initializeRoom(urlParams.get('room'));
-
+        if (urlParams = new URLSearchParams(window.location.search).get('room')) initializeRoom(urlParams);
         if (btnCreateRoom) btnCreateRoom.addEventListener('click', () => initializeRoom('room-' + Math.random().toString(36).substring(2, 9)));
         if (btnJoinRoom) btnJoinRoom.addEventListener('click', () => roomInput.value.trim() && initializeRoom(roomInput.value.trim()));
 
@@ -269,251 +283,242 @@
             roomDisplayId.innerHTML = `Salon : <strong>${roomId}</strong>`;
         }
 
-        // --- CORE WEBRTC : GESTION CAMÉRA & INTERCONNEXIONS ---
+        // --- GESTION INDIVIDUELLE DE LA PAROLE (AUDIO ANALYSER) ---
+        function startSpeechDetection(stream) {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 512;
+                
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                let wasSpeaking = false;
+
+                speechInterval = setInterval(() => {
+                    analyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) { sum += dataArray[i]; }
+                    let average = sum / bufferLength;
+
+                    // Si le volume moyen dépasse le seuil (ex: 25), on considère qu'il parle
+                    let isSpeaking = average > 25; 
+                    if (isSpeaking !== wasSpeaking) {
+                        wasSpeaking = isSpeaking;
+                        // On applique localement l'effet visuel
+                        const localBox = document.getElementById('local-video-box');
+                        if (localBox) isSpeaking ? localBox.classList.add('speaking') : localBox.classList.remove('speaking');
+                        // On envoie l'état aux autres utilisateurs
+                        socket.emit('audio-speaking', { isSpeaking });
+                    }
+                }, 150);
+            } catch (e) { console.error("Échec de la détection de voix", e); }
+        }
+
+        function stopSpeechDetection() {
+            if (speechInterval) clearInterval(speechInterval);
+            if (microphone) microphone.disconnect();
+            if (audioContext) audioContext.close();
+        }
+
+        // --- CORE WEBRTC ---
         btnToggleCam.addEventListener('click', async () => {
             if (localStream) {
-                // Éteindre la caméra
+                stopSpeechDetection();
                 localStream.getTracks().forEach(track => track.stop());
                 localStream = null;
                 const localBox = document.getElementById('local-video-box');
                 if (localBox) localBox.remove();
                 btnToggleCam.innerHTML = `<i class="fa-solid fa-camera"></i> Activer ma Caméra/Micro`;
-                btnToggleCam.classList.remove('btn-danger');
-                btnToggleCam.classList.add('btn-webrtc');
+                btnToggleCam.classList.replace('btn-danger', 'btn-webrtc');
                 
-                // Fermer toutes les connexions existantes
                 Object.keys(peerConnections).forEach(id => {
-                    peerConnections[id].close();
-                    delete peerConnections[id];
+                    peerConnections[id].close(); delete peerConnections[id];
                     const remoteBox = document.getElementById(`video-${id}`);
                     if (remoteBox) remoteBox.remove();
                 });
             } else {
-                // Allumer la caméra
                 try {
                     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     createVideoWrapper('local-video-box', 'Moi (Vous)', localStream, true);
                     btnToggleCam.innerHTML = `<i class="fa-solid fa-video-slash"></i> Couper ma Caméra`;
-                    btnToggleCam.classList.remove('btn-webrtc');
-                    btnToggleCam.classList.add('btn-danger');
-
-                    // Avertir le serveur pour demander aux autres de lancer les offres P2P
+                    btnToggleCam.classList.replace('btn-webrtc', 'btn-danger');
+                    
+                    startSpeechDetection(localStream); // Démarre le détecteur de parole
                     socket.emit('request-peers-trigger'); 
-                } catch (err) {
-                    alert("Impossible d'accéder à la caméra ou au micro. Vérifiez les autorisations.");
-                    console.error(err);
-                }
+                } catch (err) { alert("Permission caméra/micro refusée."); }
             }
         });
 
         function createVideoWrapper(id, name, stream, isMuted = false) {
             let wrapper = document.getElementById(id);
             if (!wrapper) {
-                wrapper = document.createElement('div');
-                wrapper.id = id;
-                wrapper.className = 'video-wrapper';
-                const videoEl = document.createElement('video');
-                videoEl.autoplay = true;
-                videoEl.playsInline = true;
-                videoEl.muted = isMuted;
-                videoEl.srcObject = stream;
-                
-                const label = document.createElement('div');
-                label.className = 'name-label';
-                label.innerText = name;
-
-                wrapper.appendChild(videoEl);
-                wrapper.appendChild(label);
-                videoGrid.appendChild(wrapper);
+                wrapper = document.createElement('div'); wrapper.id = id; wrapper.className = 'video-wrapper';
+                const videoEl = document.createElement('video'); videoEl.autoplay = true; videoEl.playsInline = true;
+                videoEl.muted = isMuted; videoEl.srcObject = stream;
+                const label = document.createElement('div'); label.className = 'name-label'; label.innerText = name;
+                wrapper.appendChild(videoEl); wrapper.appendChild(label); videoGrid.appendChild(wrapper);
             }
         }
 
         function initPeerConnection(userId, username, initiateCall = false) {
             if (peerConnections[userId]) return peerConnections[userId];
-
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[userId] = pc;
-
-            if (localStream) {
-                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-            }
-
-            pc.ontrack = (event) => {
-                createVideoWrapper(`video-${userId}`, username, event.streams[0], false);
-            };
-
-            pc.onicecandidate = (event) => {
-                if (event.candidate) {
-                    socket.emit('new-ice-candidate', { candidate: event.candidate, to: userId });
-                }
-            };
-
+            if (localStream) localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            pc.ontrack = (e) => createVideoWrapper(`video-${userId}`, username, e.streams[0], false);
+            pc.onicecandidate = (e) => e.candidate && socket.emit('new-ice-candidate', { candidate: e.candidate, to: userId });
             if (initiateCall && localStream) {
-                pc.createOffer()
-                    .then(offer => pc.setLocalDescription(offer))
-                    .then(() => {
-                        socket.emit('video-offer', { sdp: pc.localDescription, to: userId });
-                    });
+                pc.createOffer().then(o => pc.setLocalDescription(o)).then(() => socket.emit('video-offer', { sdp: pc.localDescription, to: userId }));
             }
-
             return pc;
         }
 
-        // --- ÉCOUTEURS SOCKETS WEBRTC ---
-        socket.on('user-joined-webrtc', ({ id, username }) => {
-            if (localStream) {
-                initPeerConnection(id, username, true);
-            }
-        });
-
+        socket.on('user-joined-webrtc', ({ id, username }) => localStream && initPeerConnection(id, username, true));
         socket.on('video-offer', async ({ sdp, from }) => {
-            const pc = initPeerConnection(from, 'Ami', false);
-            await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
+            const pc = initPeerConnection(from, 'Ami', false); await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+            const a = await pc.createAnswer(); await pc.setLocalDescription(a);
             socket.emit('video-answer', { sdp: pc.localDescription, to: from });
         });
+        socket.on('video-answer', async ({ sdp, from }) => peerConnections[from] && await peerConnections[from].setRemoteDescription(new RTCSessionDescription(sdp)));
+        socket.on('new-ice-candidate', async ({ candidate, from }) => peerConnections[from] && await peerConnections[from].addIceCandidate(new RTCIceCandidate(candidate)));
+        socket.on('user-left-webrtc', ({ id }) => { if(peerConnections[id]) { peerConnections[id].close(); delete peerConnections[id]; } const el = document.getElementById(`video-${id}`); if(el) el.remove(); });
 
-        socket.on('video-answer', async ({ sdp, from }) => {
-            const pc = peerConnections[from];
-            if (pc) {
-                await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+        // Écouteur pour appliquer l'indicateur de parole sur les flux des autres
+        socket.on('user-audio-speaking', ({ id, isSpeaking }) => {
+            const remoteBox = document.getElementById(`video-${id}`);
+            if (remoteBox) {
+                isSpeaking ? remoteBox.classList.add('speaking') : remoteBox.classList.remove('speaking');
             }
         });
 
-        socket.on('new-ice-candidate', async ({ candidate, from }) => {
-            const pc = peerConnections[from];
-            if (pc) {
-                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        // --- INTERCEPTIONS & LOGIQUE DU BOUTON "SYNC RE-FORCE" ---
+        btnSyncForce.addEventListener('click', () => {
+            socket.emit('request-sync-force');
+        });
+
+        socket.on('get-current-time-for-sync', ({ requesterId }) => {
+            let currentTime = 0;
+            let action = 'pause';
+            if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+                currentTime = ytPlayer.getCurrentTime();
+                action = ytPlayer.getPlayerState() === 1 ? 'play' : 'pause';
+            } else if (twitchPlayer) {
+                currentTime = twitchPlayer.getCurrentTime(); // Sur Twitch c'est un flux live en décalage, mais synchro
+                action = 'play';
+            } else {
+                const vp = document.getElementById('video-player');
+                if (vp) { currentTime = vp.currentTime; action = vp.paused ? 'pause' : 'play'; }
+            }
+            socket.emit('respond-time-for-sync', { requesterId, currentTime, action });
+        });
+
+
+        // --- LOGIQUE MULTI-SUPPORT MULTIMÉDIA (YOUTUBE / TWITCH / MP4) ---
+        btnLoadVideo.addEventListener('click', () => {
+            const url = videoUrlInput.value.trim();
+            if (url) {
+                let type = 'mp4';
+                if (url.includes('youtube.com') || url.includes('youtu.be')) type = 'youtube';
+                else if (url.includes('twitch.tv')) type = 'twitch';
+                
+                const videoData = { type, url };
+                loadMediaSource(videoData);
+                socket.emit('change-video', videoData);
             }
         });
 
-        socket.on('user-left-webrtc', ({ id }) => {
-            if (peerConnections[id]) {
-                peerConnections[id].close();
-                delete peerConnections[id];
-            }
-            const el = document.getElementById(`video-${id}`);
-            if (el) el.remove();
-        });
+        function loadMediaSource(videoData) {
+            ytPlayer = null; twitchPlayer = null;
+            const { type, url } = videoData;
 
-
-        // --- LOGIQUE VIDÉO CLASSIQUE & SYNCHRO ---
-        videoVolumeSlider.addEventListener('input', (e) => {
-            const vp = document.getElementById('video-player');
-            if (vp) vp.volume = e.target.value / 100;
-            if (ytPlayer && typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(e.target.value);
-        });
-
-        if (btnLoadVideo) {
-            btnLoadVideo.addEventListener('click', () => {
-                const url = videoUrlInput.value.trim();
-                if (url && currentRoomId) forcePlayVideo(url);
-            });
-        }
-
-        function forcePlayVideo(url) {
-            loadMediaSource(url);
-            socket.emit('change-video', { roomId: currentRoomId, videoUrl: url });
-        }
-
-        function loadMediaSource(url) {
-            ytPlayer = null;
-            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            if (type === 'youtube') {
                 let videoId = url.includes('youtu.be/') ? url.split('youtu.be/')[1].split(/[?#]/)[0] : url.split('v=')[1].split('&')[0];
                 mediaBox.innerHTML = `<div id="yt-player-placeholder"></div>`;
                 ytPlayer = new YT.Player('yt-player-placeholder', {
-                    videoId: videoId,
-                    playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0 },
+                    videoId: videoId, playerVars: { 'autoplay': 1, 'controls': 1 },
                     events: {
                         'onStateChange': (e) => {
                             if (isSyncing) return;
-                            if (e.data === 1 && ytLastState !== 1) socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: ytPlayer.getCurrentTime() });
-                            if (e.data === 2 && ytLastState !== 2) socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: ytPlayer.getCurrentTime() });
+                            if (e.data === 1 && ytLastState !== 1) socket.emit('video-action', { action: 'play', currentTime: ytPlayer.getCurrentTime() });
+                            if (e.data === 2 && ytLastState !== 2) socket.emit('video-action', { action: 'pause', currentTime: ytPlayer.getCurrentTime() });
                             ytLastState = e.data;
                         },
                         'onReady': (e) => e.target.setVolume(videoVolumeSlider.value)
                     }
                 });
-            } else {
+            } 
+            else if (type === 'twitch') {
+                // Extraction du nom de la chaîne (ex: https://twitch.tv/gaules -> gaules)
+                let channelName = url.split('twitch.tv/')[1].split(/[?#]/)[0];
+                mediaBox.innerHTML = `<div id="twitch-player"></div>`;
+                
+                twitchPlayer = new Twitch.Player("twitch-player", {
+                    channel: channelName,
+                    width: "100%", height: "100%",
+                    autoplay: true, muted: false
+                });
+                twitchPlayer.setVolume(videoVolumeSlider.value / 100);
+                
+                // Twitch étant du Live direct, les commandes Pause/Play classiques désynchronisent le flux,
+                // On se contente d'aligner le lecteur en cas de chargement ou de re-force synchro.
+            } 
+            else {
                 mediaBox.innerHTML = `<video id="video-player" controls autoplay src="${url}"></video>`;
                 setTimeout(() => {
                     const vp = document.getElementById('video-player');
                     if(vp) {
                         vp.volume = videoVolumeSlider.value / 100;
-                        vp.onplay = () => !isSyncing && socket.emit('video-action', { roomId: currentRoomId, action: 'play', currentTime: vp.currentTime });
-                        vp.onpause = () => !isSyncing && socket.emit('video-action', { roomId: currentRoomId, action: 'pause', currentTime: vp.currentTime });
+                        vp.onplay = () => !isSyncing && socket.emit('video-action', { action: 'play', currentTime: vp.currentTime });
+                        vp.onpause = () => !isSyncing && socket.emit('video-action', { action: 'pause', currentTime: vp.currentTime });
                     }
                 }, 200);
             }
         }
 
-        function launchFromPlaylist(url, id) {
-            forcePlayVideo(url);
-            socket.emit('remove-from-playlist', { itemId: id });
-        }
-
-        function sendChatMessage() {
-            const msg = chatInput.value.trim();
-            if (msg) { socket.emit('send-chat-message', { message: msg }); chatInput.value = ''; }
-        }
-        btnSendChat.addEventListener('click', sendChatMessage);
-        chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
-
-        btnAddPlaylist.addEventListener('click', () => {
-            const url = playlistUrlInput.value.trim();
-            if (url) { socket.emit('add-to-playlist', { videoUrl: url }); playlistUrlInput.value = ''; }
+        videoVolumeSlider.addEventListener('input', (e) => {
+            const vol = e.target.value;
+            const vp = document.getElementById('video-player');
+            if (vp) vp.volume = vol / 100;
+            if (ytPlayer && typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(vol);
+            if (twitchPlayer && typeof twitchPlayer.setVolume === 'function') twitchPlayer.setVolume(vol / 100);
         });
 
-        // RECEPTIONS CLASSIQUES
-        socket.on('update-users', (usersList) => {
-            userCount.innerText = usersList.length;
-            usersContainer.innerHTML = '';
-            usersList.forEach(user => {
-                usersContainer.innerHTML += `<div class="user-tag" style="border-color: ${user.color}44;"><i class="fa-solid fa-user" style="color: ${user.color};"></i> ${user.username}</div>`;
-            });
-        });
-
-        socket.on('chat-message', ({ username, message, color, isSystem }) => {
-            if (isSystem) {
-                chatMessages.innerHTML += `<div class="chat-msg system">${message}</div>`;
-            } else {
-                chatMessages.innerHTML += `<div class="chat-msg"><span class="name" style="color: ${color};">${username}:</span>${message}</div>`;
-            }
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        });
-
-        socket.on('update-playlist', (playlist) => {
-            playlistContainer.innerHTML = '';
-            if (playlist.length === 0) {
-                playlistContainer.innerHTML = '<div class="empty-playlist">Aucune vidéo en attente</div>';
-                return;
-            }
-            playlist.forEach((item, index) => {
-                playlistContainer.innerHTML += `
-                    <div class="playlist-item">
-                        <span class="title-text"><strong>#${index+1}</strong> ${item.title}</span>
-                        <div class="playlist-actions">
-                            <button class="btn-success" onclick="launchFromPlaylist('${item.url}', '${item.id}')"><i class="fa-solid fa-play"></i></button>
-                            <button class="btn-danger" onclick="socket.emit('remove-from-playlist', { itemId: '${item.id}' })"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
-                `;
-            });
-        });
-
-        socket.on('user-changed-video', ({ videoUrl }) => loadMediaSource(videoUrl));
+        socket.on('user-changed-video', (videoData) => loadMediaSource(videoData));
+        
         socket.on('user-video-action', ({ action, currentTime }) => {
             isSyncing = true;
             if (ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
                 if (Math.abs(ytPlayer.getCurrentTime() - currentTime) > 2) ytPlayer.seekTo(currentTime, true);
                 action === 'play' ? ytPlayer.playVideo() : ytPlayer.pauseVideo();
+            } else if (twitchPlayer) {
+                // Pour Twitch on rafraîchit simplement pour coller au direct si gros décalage
+                if(action === 'play' && twitchPlayer.isPaused()) twitchPlayer.play();
             } else {
                 const vp = document.getElementById('video-player');
                 if (vp) { vp.currentTime = currentTime; action === 'play' ? vp.play().catch(()=>{}) : vp.pause(); }
             }
-            setTimeout(() => isSyncing = false, 300);
+            setTimeout(() => isSyncing = false, 400);
         });
+
+        // --- FONCTIONS PLAYLIST & CHAT SECONDAIRES ---
+        function launchFromPlaylist(url, id) {
+            let type = 'mp4';
+            if (url.includes('youtube.com') || url.includes('youtu.be')) type = 'youtube';
+            else if (url.includes('twitch.tv')) type = 'twitch';
+            const videoData = { type, url };
+            loadMediaSource(videoData);
+            socket.emit('change-video', videoData);
+            socket.emit('remove-from-playlist', { itemId: id });
+        }
+        function sendChatMessage() { const msg = chatInput.value.trim(); if (msg) { socket.emit('send-chat-message', { message: msg }); chatInput.value = ''; } }
+        btnSendChat.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
+        btnAddPlaylist.addEventListener('click', () => { const url = playlistUrlInput.value.trim(); if (url) { socket.emit('add-to-playlist', { videoUrl: url }); playlistUrlInput.value = ''; } });
+        socket.on('update-users', (list) => { userCount.innerText = list.length; usersContainer.innerHTML = ''; list.forEach(u => { usersContainer.innerHTML += `<div class="user-tag" style="border-color: ${u.color}44;"><i class="fa-solid fa-user" style="color: ${u.color};"></i> ${u.username}</div>`; }); });
+        socket.on('chat-message', ({ username, message, color, isSystem }) => { if (isSystem) chatMessages.innerHTML += `<div class="chat-msg system">${message}</div>`; else chatMessages.innerHTML += `<div class="chat-msg"><span class="name" style="color: ${color};">${username}:</span>${message}</div>`; chatMessages.scrollTop = chatMessages.scrollHeight; });
+        socket.on('update-playlist', (pl) => { playlistContainer.innerHTML = ''; if (pl.length === 0) { playlistContainer.innerHTML = '<div class="empty-playlist">Aucune vidéo en attente</div>'; return; } pl.forEach((item, idx) => { playlistContainer.innerHTML += `<div class="playlist-item"><span class="title-text"><strong>#${idx+1}</strong> ${item.title}</span><div class="playlist-actions"><button class="btn-success" onclick="launchFromPlaylist('${item.url}', '${item.id}')"><i class="fa-solid fa-play"></i></button><button class="btn-danger" onclick="socket.emit('remove-from-playlist', { itemId: '${item.id}' })"><i class="fa-solid fa-trash"></i></button></div></div>`; }); });
     </script>
 </body>
 </html>

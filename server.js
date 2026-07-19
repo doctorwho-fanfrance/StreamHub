@@ -26,21 +26,18 @@ io.on('connection', (socket) => {
             roomsData[roomId] = { playlist: [], users: {}, currentVideo: null };
         }
 
-        // On stocke l'ID du socket pour la logique de salon et WebRTC
         roomsData[roomId].users[socket.id] = {
             id: socket.id,
             username: user,
             color: socket.userColor
         };
 
-        // Si une vidéo est déjà diffusée dans le salon, on l'envoie au nouvel arrivant
+        // Envoi de la vidéo actuelle au nouvel arrivant (YouTube, Twitch ou MP4)
         if (roomsData[roomId].currentVideo) {
-            socket.emit('user-changed-video', { videoUrl: roomsData[roomId].currentVideo });
+            socket.emit('user-changed-video', roomsData[roomId].currentVideo);
         }
 
-        // Informer les anciens qu'un nouveau est là pour tenter d'initier le WebRTC
         socket.to(roomId).emit('user-joined-webrtc', { id: socket.id, username: user });
-
         io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
         socket.emit('update-playlist', roomsData[roomId].playlist);
         
@@ -52,9 +49,32 @@ io.on('connection', (socket) => {
         });
     });
 
-    // --- LOGIQUE SIGNALING WEBRTC (LES INTERNES DE L'APPEL) ---
-    
-    // Écouteur manquant : Déclenché quand quelqu'un active sa caméra après être entré dans le salon
+    // --- INDICATEUR DE PAROLE (AUDIO DETECT) ---
+    socket.on('audio-speaking', ({ isSpeaking }) => {
+        if (socket.roomId) {
+            socket.to(socket.roomId).emit('user-audio-speaking', { id: socket.id, isSpeaking });
+        }
+    });
+
+    // --- RE-FORCE SYNC REQUEST ---
+    // Quand un utilisateur clique sur "Forcer la synchro", le serveur demande au premier de la salle sa position
+    socket.on('request-sync-force', () => {
+        const roomId = socket.roomId;
+        if (roomId && roomsData[roomId]) {
+            const users = Object.keys(roomsData[roomId].users);
+            if (users.length > 1) {
+                // On demande au premier utilisateur connecté (le "host" implicite) d'envoyer son timestamp actuel
+                const masterUser = users[0] === socket.id ? users[1] : users[0];
+                io.to(masterUser).emit('get-current-time-for-sync', { requesterId: socket.id });
+            }
+        }
+    });
+
+    socket.on('respond-time-for-sync', ({ requesterId, currentTime, action }) => {
+        io.to(requesterId).emit('user-video-action', { action, currentTime });
+    });
+
+    // --- SIGNALING WEBRTC ---
     socket.on('request-peers-trigger', () => {
         const roomId = socket.roomId;
         if (roomId) {
@@ -73,8 +93,8 @@ io.on('connection', (socket) => {
     socket.on('new-ice-candidate', ({ candidate, to }) => {
         socket.to(to).emit('new-ice-candidate', { candidate, from: socket.id });
     });
-    // ---------------------------------------------------------
 
+    // --- ACTIONS DE SALON ---
     socket.on('send-chat-message', ({ message }) => {
         const roomId = socket.roomId;
         if (roomId && message?.trim()) {
@@ -94,8 +114,7 @@ io.on('connection', (socket) => {
     socket.on('change-video', (data) => {
         const roomId = socket.roomId;
         if (roomId && roomsData[roomId]) {
-            // On sauvegarde l'URL pour les prochains arrivants
-            roomsData[roomId].currentVideo = data.videoUrl;
+            roomsData[roomId].currentVideo = data; // Stocke tout l'objet { type, url }
             socket.to(roomId).emit('user-changed-video', data);
         }
     });
@@ -103,7 +122,11 @@ io.on('connection', (socket) => {
     socket.on('add-to-playlist', ({ videoUrl }) => {
         const roomId = socket.roomId;
         if (roomId && videoUrl) {
-            let title = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') ? "Vidéo YouTube" : (videoUrl.split('/').pop().split('?')[0] || "Lien Vidéo");
+            let title = "Lien Vidéo";
+            if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) title = "Vidéo YouTube";
+            else if (videoUrl.includes('twitch.tv')) title = "Stream Twitch";
+            else title = videoUrl.split('/').pop().split('?')[0] || "Fichier MP4";
+
             const newItem = { id: Math.random().toString(36).substring(2, 7), url: videoUrl, title };
             roomsData[roomId].playlist.push(newItem);
             io.to(roomId).emit('update-playlist', roomsData[roomId].playlist);
@@ -124,9 +147,7 @@ io.on('connection', (socket) => {
             const userData = roomsData[roomId].users[socket.id];
             delete roomsData[roomId].users[socket.id];
 
-            // Informer les autres de couper le flux de ce peer
             socket.to(roomId).emit('user-left-webrtc', { id: socket.id });
-
             io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
 
             if (userData) {
