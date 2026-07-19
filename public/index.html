@@ -28,7 +28,7 @@
         }
 
         /* Styles Généraux & Scrollbar */
-        * { box-sizing: border-box; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        * { box-sizing: border-box; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
@@ -65,10 +65,10 @@
 
         /* Écrans de transition */
         #auth-screen { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; max-width: 850px; margin: 40px auto; }
-        #room-screen { display: none; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #room-screen { display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Cartes au style Glassmorphism haut de gamme */
+        /* Cartes au style Glassmorphism */
         .card {
             background: var(--card-bg); 
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -80,7 +80,7 @@
         .card h3 i { background: linear-gradient(45deg, #ff007f, #8a2be2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
         /* Formulaires & Inputs épurés */
-        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; position: relative; }
         input {
             flex: 1; padding: 14px 18px; background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #fff; 
@@ -88,7 +88,7 @@
         }
         input:focus { border-color: var(--primary); background: rgba(0, 0, 0, 0.5); outline: none; box-shadow: 0 0 15px rgba(138, 43, 226, 0.2); }
 
-        /* Boutons Stylisés */
+        /* Micro-interactions sur les Boutons */
         button {
             padding: 13px 22px; background: var(--primary-gradient);
             border: none; border-radius: 12px; color: white; font-weight: 700; font-family: inherit;
@@ -96,7 +96,7 @@
             box-shadow: 0 4px 15px rgba(106, 17, 203, 0.4);
         }
         button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(106, 17, 203, 0.6); filter: brightness(1.1); }
-        button:active { transform: translateY(0); }
+        button:active { transform: translateY(1px) scale(0.98); }
         
         .btn-block { width: 100%; }
         .btn-secondary { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: none; }
@@ -150,20 +150,47 @@
             max-width: 85%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* Badges & Listes Membres */
+        /* Badges & Rôles (Crown/Admin) */
         .users-badge { background: linear-gradient(45deg, #00f2fe, #4facfe); color: #000; padding: 2px 9px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; margin-left: auto; }
         .user-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: 12px; max-height: 75px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.02); }
         .user-tag { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-
-        /* Chat Système Amélioré */
-        .chat-box { height: 280px; background: rgba(0, 0, 0, 0.3); border-radius: 14px; padding: 15px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.02); }
-        .chat-msg { font-size: 0.88rem; line-height: 1.4; padding: 6px 10px; background: rgba(255, 255, 255, 0.02); border-radius: 8px; width: fit-content; max-width: 90%; word-break: break-word; }
-        .chat-msg .name { font-weight: 700; margin-right: 6px; }
-        .chat-msg.system { color: var(--text-muted); font-style: italic; text-align: center; font-size: 0.8rem; background: transparent; width: 100%; max-width: 100%; border: none; padding: 2px 0; }
         
+        .badge-admin {
+            background: linear-gradient(45deg, #ffd700, #ffa500);
+            color: #000; font-size: 0.7rem; font-weight: 800; padding: 1px 6px; border-radius: 6px;
+            display: inline-flex; align-items: center; gap: 3px; margin-right: 4px;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+            animation: pulse-gold 2s infinite alternate;
+        }
+        @keyframes pulse-gold { from { filter: drop-shadow(0 0 2px rgba(255,215,0,0.4)); } to { filter: drop-shadow(0 0 7px rgba(255,215,0,0.8)); } }
+
+        /* Chat & Animations Messages */
+        .chat-box { height: 280px; background: rgba(0, 0, 0, 0.3); border-radius: 14px; padding: 15px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.02); }
+        .chat-msg { 
+            font-size: 0.88rem; line-height: 1.4; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); 
+            border-radius: 12px; width: fit-content; max-width: 90%; word-break: break-word;
+            animation: msgIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+        @keyframes msgIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .chat-msg .name { font-weight: 700; margin-right: 6px; }
+        .chat-msg.system { color: var(--text-muted); font-style: italic; text-align: center; font-size: 0.8rem; background: transparent; width: 100%; max-width: 100%; border: none; padding: 2px 0; animation: fadeIn 0.3s ease; }
+        
+        /* Panneau Sélecteur d'Emojis */
+        .emoji-trigger-btn { background: transparent; box-shadow: none; padding: 0 12px; font-size: 1.2rem; color: var(--text-muted); }
+        .emoji-trigger-btn:hover { color: #fff; transform: scale(1.1); background: transparent; box-shadow: none; }
+        .emoji-picker {
+            position: absolute; bottom: 60px; right: 10px; background: #110d26; 
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px;
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; font-size: 1.3rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 100; opacity: 0; transform: translateY(10px); pointer-events: none;
+        }
+        .emoji-picker.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .emoji-item { cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; }
+        .emoji-item:hover { background: rgba(255,255,255,0.1); transform: scale(1.15); }
+
         /* Playlist / File d'attente */
         .playlist-box { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-        .playlist-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); padding: 10px 14px; border-radius: 12px; font-size: 0.85rem; border-left: 4px solid var(--primary); border: 1px solid rgba(255,255,255,0.03); border-left: 4px solid var(--primary); }
+        .playlist-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); padding: 10px 14px; border-radius: 12px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.03); border-left: 4px solid var(--primary); }
         .playlist-item:hover { background: rgba(255, 255, 255, 0.06); }
         .playlist-item .title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; font-weight: 500; }
         .playlist-actions { display: flex; gap: 6px; }
@@ -240,8 +267,17 @@
                         <div class="user-list" id="users-container"></div>
                         <div class="chat-box" id="chat-messages"></div>
                         <div class="input-group">
+                            <button class="emoji-trigger-btn" id="emoji-btn">😎</button>
                             <input type="text" id="chat-input" placeholder="Tapez votre message...">
                             <button id="send-chat-btn"><i class="fa-solid fa-paper-plane"></i></button>
+
+                            <!-- Sélecteur d'émojis Pop-up -->
+                            <div class="emoji-picker" id="emoji-picker">
+                                <div class="emoji-item">😂</div><div class="emoji-item">😮</div><div class="emoji-item">🔥</div>
+                                <div class="emoji-item">👍</div><div class="emoji-item">🎉</div><div class="emoji-item">❤️</div>
+                                <div class="emoji-item">🚀</div><div class="emoji-item">👀</div><div class="emoji-item">👑</div>
+                                <div class="emoji-item">🤔</div><div class="emoji-item">🍿</div><div class="emoji-item">💯</div>
+                            </div>
                         </div>
                     </div>
 
@@ -291,6 +327,8 @@
         const playlistContainer = document.getElementById('playlist-container');
         const btnToggleCam = document.getElementById('toggle-cam-btn');
         const videoGrid = document.getElementById('video-grid');
+        const emojiBtn = document.getElementById('emoji-btn');
+        const emojiPicker = document.getElementById('emoji-picker');
 
         let currentRoomId = null;
         let isSyncing = false;
@@ -306,7 +344,49 @@
         let speechInterval = null;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        // Auto-login & anti-perte de pseudo via localStorage
+        // --- GÉNÉRATEUR SYSTÈME DE NOTIFICATIONS SONORES (Discret & High-tech) ---
+        function playSystemSound(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'message') {
+                    // Petit "bip" court et cristallin
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // Ré5
+                    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+                    osc.start(); osc.stop(ctx.currentTime + 0.12);
+                } else if (type === 'join') {
+                    // Double note montante harmonieuse
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, ctx.currentTime); // La4
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // Mi5
+                    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+                    osc.start(); osc.stop(ctx.currentTime + 0.25);
+                }
+            } catch (e) { console.log("Audio bloqué par le navigateur tant qu'on clique pas."); }
+        }
+
+        // --- GESTION DU SÉLECTEUR D'EMOJIS ---
+        emojiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            emojiPicker.classList.toggle('active');
+        });
+        document.querySelectorAll('.emoji-item').forEach(item => {
+            item.addEventListener('click', () => {
+                chatInput.value += item.innerText;
+                chatInput.focus();
+                emojiPicker.classList.remove('active');
+            });
+        });
+        document.addEventListener('click', () => emojiPicker.classList.remove('active'));
+
+        // Profil & Persistance
         const savedUsername = localStorage.getItem('streamhub_username');
         if (savedUsername) {
             usernameInput.value = savedUsername;
@@ -316,10 +396,7 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const urlRoomId = urlParams.get('room');
-        
-        if (urlRoomId) {
-            setTimeout(() => { initializeRoom(urlRoomId); }, 300); 
-        }
+        if (urlRoomId) { setTimeout(() => { initializeRoom(urlRoomId); }, 300); }
 
         if (btnCreateRoom) btnCreateRoom.addEventListener('click', () => initializeRoom('room-' + Math.random().toString(36).substring(2, 9)));
         if (btnJoinRoom) btnJoinRoom.addEventListener('click', () => roomInput.value.trim() && initializeRoom(roomInput.value.trim()));
@@ -527,14 +604,21 @@
         
         socket.on('update-users', (list) => { 
             userCount.innerText = list.length; usersContainer.innerHTML = ''; 
-            list.forEach(u => { usersContainer.innerHTML += `<div class="user-tag" style="border-color: ${u.color}44;"><i class="fa-solid fa-circle" style="color: ${u.color}; font-size: 0.6rem;"></i> ${u.username}</div>`; }); 
+            list.forEach((u, index) => { 
+                // Le premier utilisateur de la liste (index 0) est désigné Admin de session
+                const roleBadge = index === 0 ? `<span class="badge-admin"><i class="fa-solid fa-crown"></i> Admin</span>` : '';
+                usersContainer.innerHTML += `<div class="user-tag" style="border-color: ${u.color}44;">${roleBadge}<i class="fa-solid fa-circle" style="color: ${u.color}; font-size: 0.5rem;"></i> ${u.username}</div>`; 
+            }); 
         });
         
         socket.on('chat-message', ({ username, message, color, isSystem }) => { 
             if (isSystem) {
-                chatMessages.innerHTML += `<div class="chat-msg system"><i class="fa-solid fa-robot"></i> ${message}</div>`; 
+                chatMessages.innerHTML += `<div class="chat-msg system"><i class="fa-solid fa-robot"></i> ${message}</div>`;
+                playSystemSound('join'); // Son d'événement / connexion
             } else {
+                // Détecter si le message vient de l'Admin (on simule ici via la couleur ou un tag système pour l'exemple)
                 chatMessages.innerHTML += `<div class="chat-msg"><span class="name" style="color: ${color};">${username}:</span>${message}</div>`; 
+                playSystemSound('message'); // Son de message reçu
             }
             chatMessages.scrollTop = chatMessages.scrollHeight; 
         });
