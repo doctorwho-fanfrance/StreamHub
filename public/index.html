@@ -4,130 +4,171 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamHub - Regarder Ensemble</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Polices et Icones Premium -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #0f0c1b 0%, #05050d 100%);
-            --card-bg: rgba(20, 20, 35, 0.65);
-            --accent-primary: #8a2be2;
-            --accent-secondary: #4a00e0;
+            --bg-dark: #070510;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #1a103c 0%, #070510 70%);
+            --card-bg: rgba(15, 12, 30, 0.65);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --accent-glow: rgba(138, 43, 226, 0.3);
+            
+            /* Couleurs thématiques */
+            --primary: #8a2be2;
+            --primary-gradient: linear-gradient(135deg, #a044ff 0%, #6a11cb 100%);
+            --secondary-gradient: linear-gradient(135deg, #ff007f 0%, #7928ca 100%);
+            --success-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            --danger-gradient: linear-gradient(135deg, #ff4e50 0%, #f9d423 100%);
+            
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
-            --glow: 0 0 20px rgba(138, 43, 226, 0.4);
-            --twitch-color: #9146FF;
         }
+
+        /* Styles Généraux & Scrollbar */
+        * { box-sizing: border-box; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.13); border-radius: 20px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg-gradient);
+            background: var(--bg-dark);
+            background-image: var(--bg-gradient);
             color: var(--text-main);
             margin: 0;
-            padding: 30px 20px;
+            padding: 40px 20px;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-sizing: border-box;
         }
 
-        .container { width: 100%; max-width: 1300px; }
-        header { text-align: center; margin-bottom: 30px; }
+        .container { width: 100%; max-width: 1400px; }
+        
+        /* Header moderne */
+        header { text-align: center; margin-bottom: 40px; position: relative; }
         header h1 {
-            font-size: 2.8rem; font-weight: 800; margin: 0;
-            background: linear-gradient(45deg, #ff007f, #8a2be2);
+            font-size: 3.5rem; font-weight: 800; margin: 0; letter-spacing: -1px;
+            background: linear-gradient(45deg, #ff007f, #8a2be2, #00f2fe);
+            background-size: 200% auto;
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: shine 5s linear infinite;
         }
+        header p { color: var(--text-muted); font-size: 1.1rem; margin-top: 8px; font-weight: 500; }
 
-        #auth-screen { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }
-        #room-screen { display: none; }
-        @media (max-width: 992px) {
-            #room-layout { grid-template-columns: 1fr !important; }
-            #auth-screen { grid-template-columns: 1fr; }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        /* Écrans de transition */
+        #auth-screen { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; max-width: 850px; margin: 40px auto; }
+        #room-screen { display: none; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cartes au style Glassmorphism haut de gamme */
+        .card {
+            background: var(--card-bg); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border); padding: 25px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.1);
         }
+        .card:hover { border-color: rgba(138, 43, 226, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px var(--accent-glow); }
+        .card h3 { margin: 0 0 18px 0; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 12px; color: #fff; }
+        .card h3 i { background: linear-gradient(45deg, #ff007f, #8a2be2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* Formulaires & Inputs épurés */
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        input {
+            flex: 1; padding: 14px 18px; background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #fff; 
+            font-family: inherit; font-size: 0.95rem; font-weight: 500;
+        }
+        input:focus { border-color: var(--primary); background: rgba(0, 0, 0, 0.5); outline: none; box-shadow: 0 0 15px rgba(138, 43, 226, 0.2); }
+
+        /* Boutons Stylisés */
+        button {
+            padding: 13px 22px; background: var(--primary-gradient);
+            border: none; border-radius: 12px; color: white; font-weight: 700; font-family: inherit;
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 15px rgba(106, 17, 203, 0.4);
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(106, 17, 203, 0.6); filter: brightness(1.1); }
+        button:active { transform: translateY(0); }
+        
+        .btn-block { width: 100%; }
+        .btn-secondary { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: none; }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.12); box-shadow: none; }
+        .btn-success { background: var(--success-gradient); box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4); color: #000; }
+        .btn-danger { background: var(--danger-gradient); box-shadow: 0 4px 15px rgba(255, 78, 80, 0.4); }
+        .btn-webrtc { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #05050d; font-weight: 700; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3); }
+        .btn-sync { background: var(--secondary-gradient); color: white; font-weight: 700; margin-top: 0; box-shadow: 0 4px 15px rgba(255, 0, 127, 0.3); }
+
+        /* Layout Principal Asymétrique */
+        #room-layout { display: grid; grid-template-columns: 1fr 420px; gap: 30px; align-items: start; }
+        @media (max-width: 1150px) { #room-layout { grid-template-columns: 1fr; } #auth-screen { grid-template-columns: 1fr; } }
 
         .room-status {
-            background: rgba(138, 43, 226, 0.15); border: 1px solid var(--accent-primary);
-            padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 20px; font-weight: 600;
+            background: rgba(138, 43, 226, 0.1); border: 1px solid rgba(138, 43, 226, 0.3);
+            padding: 14px; border-radius: 14px; text-align: center; margin-bottom: 30px; font-weight: 600;
+            backdrop-filter: blur(10px); letter-spacing: 0.5px;
         }
 
-        #room-layout { display: grid; grid-template-columns: 1fr 400px; gap: 20px; align-items: start; }
-        
-        .card {
-            background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.07); padding: 22px; border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); margin-bottom: 20px;
-        }
-        .card h3 { margin: 0 0 10px 0; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; }
-        .card h3 i { color: #ff007f; }
-        
-        .input-group { display: flex; gap: 8px; margin-bottom: 12px; }
-        input {
-            flex: 1; padding: 10px 14px; background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; outline: none;
-        }
-
-        button {
-            padding: 10px 20px; background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-            border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;
-            display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;
-        }
-        button:hover { transform: translateY(-1px); box-shadow: var(--glow); }
-        .btn-block { width: 100%; }
-        .btn-secondary { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        .btn-danger { background: linear-gradient(135deg, #ff0055 0%, #990033 100%); }
-        .btn-webrtc { background: #00f2fe; color: #000; font-weight: 700; margin-bottom: 10px; }
-        .btn-sync { background: linear-gradient(135deg, #f12711, #f5af19); color: white; font-weight: 700; margin-top: 10px; }
-
+        /* Zone Vidéo Cinématique */
         .media-container {
             position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
-            border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); margin-top: 10px;
+            border-radius: 16px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); margin-top: 15px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
         video, iframe, #yt-player-placeholder, #twitch-player { width: 100%; height: 100%; border: none; display: block; }
 
         .player-controls {
-            display: flex; align-items: center; justify-content: space-between; margin-top: 12px;
-            background: rgba(255, 255, 255, 0.04); padding: 8px 14px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: space-between; margin-top: 15px;
+            background: rgba(0, 0, 0, 0.3); padding: 12px 20px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.04);
         }
-        .volume-control { display: flex; align-items: center; gap: 12px; }
-        .volume-slider { -webkit-appearance: none; width: 110px; height: 4px; background: rgba(255, 255, 255, 0.2); outline: none; }
-        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-primary); }
+        .volume-control { display: flex; align-items: center; gap: 15px; font-size: 0.9rem; color: var(--text-muted); }
+        .volume-slider { -webkit-appearance: none; width: 130px; height: 5px; background: rgba(255, 255, 255, 0.1); outline: none; border-radius: 10px; }
+        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #00f2fe; cursor: pointer; box-shadow: 0 0 10px #00f2fe; }
 
+        /* Grille Visio WebRTC */
         .video-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-            gap: 10px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 12px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.4); padding: 12px; border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
         }
         .video-wrapper {
-            position: relative; aspect-ratio: 4 / 3; background: #1a1a2e; border-radius: 8px; overflow: hidden;
-            border: 2px solid rgba(255,255,255,0.1); transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            position: relative; aspect-ratio: 4 / 3; background: #0b0816; border-radius: 12px; overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.08);
         }
-        .video-wrapper.speaking {
-            border-color: #00ff87 !important;
-            box-shadow: 0 0 15px rgba(0, 255, 135, 0.6);
-        }
+        .video-wrapper.speaking { border-color: #00ff87 !important; box-shadow: 0 0 20px rgba(0, 255, 135, 0.5); transform: scale(1.02); }
         .video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
         .video-wrapper .name-label {
-            position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.6);
-            padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: #fff; max-width: 80%;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            position: absolute; bottom: 6px; left: 6px; background: rgba(7, 5, 16, 0.75);
+            backdrop-filter: blur(5px); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; color: #fff;
+            max-width: 85%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .users-badge { background: #00f2fe; color: #000; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; }
-        .user-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; padding: 8px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; max-height: 60px; overflow-y: auto; }
-        .user-tag { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; }
-        .chat-box { height: 200px; background: rgba(0, 0, 0, 0.25); border-radius: 10px; padding: 12px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
-        .chat-msg { font-size: 0.85rem; }
-        .chat-msg .name { font-weight: 700; margin-right: 5px; }
-        .chat-msg.system { color: var(--text-muted); font-style: italic; text-align: center; font-size: 0.8rem; }
+        /* Badges & Listes Membres */
+        .users-badge { background: linear-gradient(45deg, #00f2fe, #4facfe); color: #000; padding: 2px 9px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; margin-left: auto; }
+        .user-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: 12px; max-height: 75px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.02); }
+        .user-tag { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+
+        /* Chat Système Amélioré */
+        .chat-box { height: 280px; background: rgba(0, 0, 0, 0.3); border-radius: 14px; padding: 15px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.02); }
+        .chat-msg { font-size: 0.88rem; line-height: 1.4; padding: 6px 10px; background: rgba(255, 255, 255, 0.02); border-radius: 8px; width: fit-content; max-width: 90%; word-break: break-word; }
+        .chat-msg .name { font-weight: 700; margin-right: 6px; }
+        .chat-msg.system { color: var(--text-muted); font-style: italic; text-align: center; font-size: 0.8rem; background: transparent; width: 100%; max-width: 100%; border: none; padding: 2px 0; }
         
-        .playlist-box { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-        .playlist-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.04); padding: 6px 10px; border-radius: 8px; font-size: 0.85rem; border-left: 3px solid var(--accent-primary); }
-        .playlist-item .title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-        .playlist-actions { display: flex; gap: 4px; }
-        .playlist-item button { padding: 5px 8px; font-size: 0.75rem; border-radius: 6px; }
-        .empty-playlist { color: var(--text-muted); font-size: 0.85rem; font-style: italic; text-align: center; padding: 10px; }
+        /* Playlist / File d'attente */
+        .playlist-box { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+        .playlist-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); padding: 10px 14px; border-radius: 12px; font-size: 0.85rem; border-left: 4px solid var(--primary); border: 1px solid rgba(255,255,255,0.03); border-left: 4px solid var(--primary); }
+        .playlist-item:hover { background: rgba(255, 255, 255, 0.06); }
+        .playlist-item .title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; font-weight: 500; }
+        .playlist-actions { display: flex; gap: 6px; }
+        .playlist-item button { padding: 6px 10px; font-size: 0.75rem; border-radius: 8px; box-shadow: none; }
+        .empty-playlist { color: var(--text-muted); font-size: 0.85rem; font-style: italic; text-align: center; padding: 15px; }
     </style>
 </head>
 <body>
@@ -135,17 +176,18 @@
     <div class="container">
         <header>
             <h1>StreamHub</h1>
-            <p>Salons de streaming collaboratifs avec Visio.</p>
+            <p>Salons de streaming privés synchronisés avec Visio HD</p>
         </header>
         
+        <!-- Écran de Connexion / Création -->
         <div id="auth-screen">
-            <div class="card" style="grid-column: 1 / -1; margin-bottom: 10px;">
+            <div class="card" style="grid-column: 1 / -1; margin-bottom: 5px;">
                 <h3><i class="fa-solid fa-user-astronaut"></i> Votre Profil</h3>
                 <input type="text" id="username-input" placeholder="Choisissez un pseudonyme...">
             </div>
             <div class="card">
                 <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Lancer une session</h3>
-                <button id="create-room-btn" class="btn-block">Créer un salon privé</button>
+                <button id="create-room-btn" class="btn-block"><i class="fa-solid fa-plus"></i> Créer un salon privé</button>
             </div>
             <div class="card">
                 <h3><i class="fa-solid fa-right-to-bracket"></i> Rejoindre un ami</h3>
@@ -156,15 +198,17 @@
             </div>
         </div>
 
+        <!-- Écran du Salon Principal -->
         <div id="room-screen">
             <div class="room-status" id="room-display-id">Connecté</div>
 
             <div id="room-layout">
+                <!-- Colonne Gauche : Lecteur Média -->
                 <div class="left-col">
                     <div class="card">
-                        <h3><i class="fa-solid fa-play-pause"></i> Lecteur Synchro (YouTube, Twitch, MP4)</h3>
+                        <h3><i class="fa-solid fa-play-pause"></i> Lecteur Synchro (YouTube, Twitch, Direct MP4)</h3>
                         <div class="input-group">
-                            <input type="text" id="video-url-input" placeholder="Lien MP4, YouTube ou Chaîne Twitch...">
+                            <input type="text" id="video-url-input" placeholder="Collez un lien vidéo ou flux streaming...">
                             <button id="load-video-btn">Charger</button>
                         </div>
                         <div class="media-container" id="media-box">
@@ -181,31 +225,35 @@
                     </div>
                 </div>
 
+                <!-- Colonne Droite : Widgets de communication et listes -->
                 <div class="right-col">
+                    <!-- Section Visio Caméra -->
                     <div class="card">
-                        <h3><i class="fa-solid fa-video"></i> Caméras en direct</h3>
-                        <button id="toggle-cam-btn" class="btn-block btn-webrtc"><i class="fa-solid fa-camera"></i> Activer ma Caméra/Micro</button>
+                        <h3><i class="fa-solid fa-video"></i> Salons Caméras / Audio</h3>
+                        <button id="toggle-cam-btn" class="btn-block btn-webrtc"><i class="fa-solid fa-camera"></i> Activer ma Caméra & Micro</button>
                         <div class="video-grid" id="video-grid"></div>
                     </div>
 
+                    <!-- Section Chat Room -->
                     <div class="card">
-                        <h3><i class="fa-solid fa-comments"></i> Chat <span class="users-badge" id="user-count">0</span></h3>
+                        <h3><i class="fa-solid fa-comments"></i> Chat en direct <span class="users-badge" id="user-count">0</span></h3>
                         <div class="user-list" id="users-container"></div>
                         <div class="chat-box" id="chat-messages"></div>
                         <div class="input-group">
-                            <input type="text" id="chat-input" placeholder="Écrire...">
+                            <input type="text" id="chat-input" placeholder="Tapez votre message...">
                             <button id="send-chat-btn"><i class="fa-solid fa-paper-plane"></i></button>
                         </div>
                     </div>
 
+                    <!-- Section File d'attente / Playlist -->
                     <div class="card">
-                        <h3><i class="fa-solid fa-list-ol"></i> File</h3>
+                        <h3><i class="fa-solid fa-list-ol"></i> Prochaines Vidéos</h3>
                         <div class="input-group">
-                            <input type="text" id="playlist-url-input" placeholder="Lien à la suite...">
-                            <button id="add-playlist-btn" class="btn-secondary">+</button>
+                            <input type="text" id="playlist-url-input" placeholder="Ajouter un lien à la suite...">
+                            <button id="add-playlist-btn" class="btn-secondary"><i class="fa-solid fa-plus"></i></button>
                         </div>
                         <div class="playlist-box" id="playlist-container">
-                            <div class="empty-playlist">Aucune vidéo</div>
+                            <div class="empty-playlist">Aucune vidéo dans la file d'attente</div>
                         </div>
                     </div>
                 </div>
@@ -213,6 +261,7 @@
         </div>
     </div>
 
+    <!-- Scripts Intégrés -->
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="https://player.twitch.tv/js/embed/v1.js"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -257,7 +306,7 @@
         let speechInterval = null;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        // --- RECUPERATION DU LOCALSTORAGE ET AUTO-CONNECT ---
+        // Auto-login & anti-perte de pseudo via localStorage
         const savedUsername = localStorage.getItem('streamhub_username');
         if (savedUsername) {
             usernameInput.value = savedUsername;
@@ -268,11 +317,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const urlRoomId = urlParams.get('room');
         
-        // Si un lien de room est présent, on connecte automatiquement l'utilisateur au chargement
         if (urlRoomId) {
-            setTimeout(() => {
-                initializeRoom(urlRoomId);
-            }, 300); 
+            setTimeout(() => { initializeRoom(urlRoomId); }, 300); 
         }
 
         if (btnCreateRoom) btnCreateRoom.addEventListener('click', () => initializeRoom('room-' + Math.random().toString(36).substring(2, 9)));
@@ -281,15 +327,13 @@
         function initializeRoom(roomId) {
             currentRoomId = roomId;
             const pseudo = usernameInput.value.trim() || 'Anonyme';
-            
-            // On sauvegarde le pseudo choisi pour les prochaines fois
             localStorage.setItem('streamhub_username', pseudo);
 
             window.history.pushState({}, '', `?room=${roomId}`);
             socket.emit('join-room', { roomId, username: pseudo });
             authScreen.style.display = 'none';
             roomScreen.style.display = 'block';
-            roomDisplayId.innerHTML = `Salon : <strong>${roomId}</strong>`;
+            roomDisplayId.innerHTML = `<i class="fa-solid fa-hashtag"></i> ID unique du salon : <strong style="color:#00f2fe">${roomId}</strong>`;
         }
 
         // --- GESTION PAROLE & WEBRTC ---
@@ -333,8 +377,8 @@
                 localStream = null;
                 const localBox = document.getElementById('local-video-box');
                 if (localBox) localBox.remove();
-                btnToggleCam.innerHTML = `<i class="fa-solid fa-camera"></i> Activer ma Caméra/Micro`;
-                btnToggleCam.classList.replace('btn-danger', 'btn-webrtc');
+                btnToggleCam.innerHTML = `<i class="fa-solid fa-camera"></i> Activer ma Caméra & Micro`;
+                btnToggleCam.classList.remove('btn-danger');
                 Object.keys(peerConnections).forEach(id => {
                     peerConnections[id].close(); delete peerConnections[id];
                     const remoteBox = document.getElementById(`video-${id}`);
@@ -344,11 +388,11 @@
                 try {
                     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     createVideoWrapper('local-video-box', 'Moi (Vous)', localStream, true);
-                    btnToggleCam.innerHTML = `<i class="fa-solid fa-video-slash"></i> Couper ma Caméra`;
-                    btnToggleCam.classList.replace('btn-webrtc', 'btn-danger');
+                    btnToggleCam.innerHTML = `<i class="fa-solid fa-video-slash"></i> Désactiver le Flux Vidéo`;
+                    btnToggleCam.classList.add('btn-danger');
                     startSpeechDetection(localStream);
                     socket.emit('request-peers-trigger'); 
-                } catch (err) { alert("Permission refusée."); }
+                } catch (err) { alert("Accès matériel refusé ou indisponible."); }
             }
         });
 
@@ -387,7 +431,7 @@
         socket.on('user-left-webrtc', ({ id }) => { if(peerConnections[id]) { peerConnections[id].close(); delete peerConnections[id]; } const el = document.getElementById(`video-${id}`); if(el) el.remove(); });
         socket.on('user-audio-speaking', ({ id, isSpeaking }) => { const rb = document.getElementById(`video-${id}`); if (rb) isSpeaking ? rb.classList.add('speaking') : rb.classList.remove('speaking'); });
 
-        // --- SYNCHRO ET LECTEUR ---
+        // --- CODE LECTEUR & LOGIQUE INTERNE ---
         btnSyncForce.addEventListener('click', () => socket.emit('request-sync-force'));
         socket.on('get-current-time-for-sync', ({ requesterId }) => {
             let currentTime = 0, action = 'pause';
@@ -471,7 +515,7 @@
             setTimeout(() => isSyncing = false, 400);
         });
 
-        // --- AUTRES FONCTIONS ---
+        // --- COMPOSANTS AUXILIAIRES ---
         function launchFromPlaylist(url, id) {
             let type = 'mp4'; if (url.includes('youtube.com') || url.includes('youtu.be')) type = 'youtube'; else if (url.includes('twitch.tv')) type = 'twitch';
             const videoData = { type, url }; loadMediaSource(videoData); socket.emit('change-video', videoData); socket.emit('remove-from-playlist', { itemId: id });
@@ -480,9 +524,26 @@
         btnSendChat.addEventListener('click', sendChatMessage);
         chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
         btnAddPlaylist.addEventListener('click', () => { const url = playlistUrlInput.value.trim(); if (url) { socket.emit('add-to-playlist', { videoUrl: url }); playlistUrlInput.value = ''; } });
-        socket.on('update-users', (list) => { userCount.innerText = list.length; usersContainer.innerHTML = ''; list.forEach(u => { usersContainer.innerHTML += `<div class="user-tag" style="border-color: ${u.color}44;"><i class="fa-solid fa-user" style="color: ${u.color};"></i> ${u.username}</div>`; }); });
-        socket.on('chat-message', ({ username, message, color, isSystem }) => { if (isSystem) chatMessages.innerHTML += `<div class="chat-msg system">${message}</div>`; else chatMessages.innerHTML += `<div class="chat-msg"><span class="name" style="color: ${color};">${username}:</span>${message}</div>`; chatMessages.scrollTop = chatMessages.scrollHeight; });
-        socket.on('update-playlist', (pl) => { playlistContainer.innerHTML = ''; if (pl.length === 0) { playlistContainer.innerHTML = '<div class="empty-playlist">Aucune vidéo en attente</div>'; return; } pl.forEach((item, idx) => { playlistContainer.innerHTML += `<div class="playlist-item"><span class="title-text"><strong>#${idx+1}</strong> ${item.title}</span><div class="playlist-actions"><button class="btn-success" onclick="launchFromPlaylist('${item.url}', '${item.id}')"><i class="fa-solid fa-play"></i></button><button class="btn-danger" onclick="socket.emit('remove-from-playlist', { itemId: '${item.id}' })"><i class="fa-solid fa-trash"></i></button></div></div>`; }); });
+        
+        socket.on('update-users', (list) => { 
+            userCount.innerText = list.length; usersContainer.innerHTML = ''; 
+            list.forEach(u => { usersContainer.innerHTML += `<div class="user-tag" style="border-color: ${u.color}44;"><i class="fa-solid fa-circle" style="color: ${u.color}; font-size: 0.6rem;"></i> ${u.username}</div>`; }); 
+        });
+        
+        socket.on('chat-message', ({ username, message, color, isSystem }) => { 
+            if (isSystem) {
+                chatMessages.innerHTML += `<div class="chat-msg system"><i class="fa-solid fa-robot"></i> ${message}</div>`; 
+            } else {
+                chatMessages.innerHTML += `<div class="chat-msg"><span class="name" style="color: ${color};">${username}:</span>${message}</div>`; 
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight; 
+        });
+        
+        socket.on('update-playlist', (pl) => { 
+            playlistContainer.innerHTML = ''; 
+            if (pl.length === 0) { playlistContainer.innerHTML = '<div class="empty-playlist">Aucune vidéo en attente</div>'; return; } 
+            pl.forEach((item, idx) => { playlistContainer.innerHTML += `<div class="playlist-item"><span class="title-text"><strong>#${idx+1}</strong> ${item.title}</span><div class="playlist-actions"><button class="btn-success" onclick="launchFromPlaylist('${item.url}', '${item.id}')"><i class="fa-solid fa-play"></i></button><button class="btn-danger" onclick="socket.emit('remove-from-playlist', { itemId: '${item.id}' })"><i class="fa-solid fa-trash"></i></button></div></div>`; }); 
+        });
     </script>
 </body>
 </html>
