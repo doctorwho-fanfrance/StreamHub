@@ -5,87 +5,112 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
+// Service des fichiers statiques (html, css, js)
 app.use(express.static(path.join(__dirname, 'public')));
 
-const roomsData = {};
-const CHAT_COLORS = ['#ff007f', '#00f2fe', '#4facfe', '#00ff87', '#f9d423', '#ff4e50', '#e100ff', '#00ffcc'];
+// Couleurs attribuées aléatoirement aux utilisateurs pour le chat & les pseudos
+const USER_COLORS = [
+    '#ff007f', '#00f2fe', '#4facfe', '#00ff87', 
+    '#ffd700', '#ffa500', '#a044ff', '#ff4e50'
+];
 
-// Pour stocker les timers des utilisateurs qui actualisent la page
-const disconnectTimeouts = {};
+// Stockage en mémoire des données des salons
+// Structure : { [roomId]: { users: [], playlist: [], tttState: {}, c4State: {} } }
+const rooms = {};
+
+// Helper pour réinitialiser le Morpion
+function getInitialTTTState() {
+    return {
+        board: Array(9).fill(''),
+        turn: 'X'
+    };
+}
+
+// Helper pour réinitialiser le Puissance 4 (6 lignes x 7 colonnes)
+function getInitialC4State() {
+    return {
+        board: Array(6).fill(null).map(() => Array(7).fill(0)),
+        turn: 1 // 1 = Joueur 1 (Rouge), 2 = Joueur 2 (Jaune)
+    };
+}
 
 io.on('connection', (socket) => {
-    console.log(`[Connecté] : ${socket.id}`);
+    console.log(`[+] Nouveau client connecté : ${socket.id}`);
 
+    // --- REJOINDRE UN SALON ---
     socket.on('join-room', ({ roomId, username }) => {
-        socket.join(roomId);
         socket.roomId = roomId;
-        const user = username ? username.trim() : 'Anonyme';
-        socket.username = user;
+        socket.username = username || 'Anonyme';
+        socket.userColor = USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)];
 
-        if (!roomsData[roomId]) {
-            roomsData[roomId] = { playlist: [], users: {}, currentVideo: null };
+        socket.join(roomId);
+
+        // Création du salon en mémoire s'il n'existe pas encore
+        if (!rooms[roomId]) {
+            rooms[roomId] = {
+                users: [],
+                playlist: [],
+                tttState: getInitialTTTState(),
+                c4State: getInitialC4State()
+            };
         }
 
-        // --- GESTION DU RECHARGEMENT (ANTI-SPAM CHAT) ---
-        // On cherche si cet utilisateur était déjà là récemment (même pseudo dans la même room)
-        const alreadyExisted = Object.values(roomsData[roomId].users).find(u => u.username === user);
-        
-        if (alreadyExisted) {
-            // S'il y a un timer de déconnexion en cours pour ce pseudo, on l'annule !
-            if (disconnectTimeouts[alreadyExisted.id]) {
-                clearTimeout(disconnectTimeouts[alreadyExisted.id]);
-                delete disconnectTimeouts[alreadyExisted.id];
-            }
-            // On récupère sa couleur d'origine pour garder une cohérence graphique
-            socket.userColor = alreadyExisted.color;
-            // On supprime l'ancienne entrée temporaire pour mettre la nouvelle à jour
-            delete roomsData[roomId].users[alreadyExisted.id];
-        } else {
-            // Nouvel utilisateur classique
-            socket.userColor = CHAT_COLORS[Math.floor(Math.random() * CHAT_COLORS.length)];
-        }
+        const room = rooms[roomId];
 
-        roomsData[roomId].users[socket.id] = {
+        // Ajout de l'utilisateur à la liste du salon
+        room.users.push({
             id: socket.id,
-            username: user,
+            username: socket.username,
             color: socket.userColor
-        };
+        });
 
-        if (roomsData[roomId].currentVideo) {
-            socket.emit('user-changed-video', roomsData[roomId].currentVideo);
-        }
+        // Notification d'arrivée dans le chat
+        io.to(roomId).emit('chat-message', {
+            username: 'Système',
+            message: `${socket.username} a rejoint le salon ! 🎉`,
+            color: '#00f2fe',
+            isSystem: true
+        });
 
-        socket.to(roomId).emit('user-joined-webrtc', { id: socket.id, username: user });
-        io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
-        socket.emit('update-playlist', roomsData[roomId].playlist);
-        
-        // On n'envoie le message de bienvenue que si ce n'est pas un simple rafraîchissement de page
-        if (!alreadyExisted) {
-            io.to(roomId).emit('chat-message', {
-                username: 'Système',
-                message: `${user} a rejoint le salon.`,
-                color: '#9ca3af',
-                isSystem: true
-            });
+        // Mise à jour de la liste des membres pour tout le monde
+        io.to(roomId).emit('update-users', room.users);
+
+        // Envoyer l'état actuel de la playlist et des jeux au nouvel arrivant
+        socket.emit('update-playlist', room.playlist);
+        socket.emit('ttt-update', room.tttState);
+        socket.emit('c4-update', room.c4State);
+
+        // Si ce n'est pas le premier utilisateur, on demande l'heure actuelle de la vidéo à un ancien
+        if (room.users.length > 1) {
+            const firstUser = room.users[0].id;
+            io.to(firstUser).emit('get-current-time-for-sync', { requesterId: socket.id });
         }
     });
 
-    socket.on('audio-speaking', ({ isSpeaking }) => {
-        if (socket.roomId) {
-            socket.to(socket.roomId).emit('user-audio-speaking', { id: socket.id, isSpeaking });
-        }
+    // --- SYNCHRONISATION LECTEUR VIDÉO ---
+    socket.on('change-video', (videoData) => {
+        if (!socket.roomId) return;
+        socket.to(socket.roomId).emit('user-changed-video', videoData);
+    });
+
+    socket.on('video-action', ({ action, currentTime }) => {
+        if (!socket.roomId) return;
+        socket.to(socket.roomId).emit('user-video-action', { action, currentTime });
     });
 
     socket.on('request-sync-force', () => {
-        const roomId = socket.roomId;
-        if (roomId && roomsData[roomId]) {
-            const users = Object.keys(roomsData[roomId].users);
-            if (users.length > 1) {
-                const masterUser = users[0] === socket.id ? users[1] : users[0];
-                io.to(masterUser).emit('get-current-time-for-sync', { requesterId: socket.id });
-            }
+        if (!socket.roomId || !rooms[socket.roomId]) return;
+        const roomUsers = rooms[socket.roomId].users;
+        if (roomUsers.length > 1) {
+            const hostId = roomUsers[0].id;
+            io.to(hostId).emit('get-current-time-for-sync', { requesterId: socket.id });
         }
     });
 
@@ -93,102 +118,143 @@ io.on('connection', (socket) => {
         io.to(requesterId).emit('user-video-action', { action, currentTime });
     });
 
+    // --- LOGIQUE MULTIJOUEUR WEBRTC (VISIO / VOCAL) ---
     socket.on('request-peers-trigger', () => {
-        const roomId = socket.roomId;
-        if (roomId) {
-            socket.to(roomId).emit('user-joined-webrtc', { id: socket.id, username: socket.username });
-        }
+        if (!socket.roomId) return;
+        socket.to(socket.roomId).emit('user-joined-webrtc', {
+            id: socket.id,
+            username: socket.username
+        });
     });
 
     socket.on('video-offer', ({ sdp, to }) => {
-        socket.to(to).emit('video-offer', { sdp, from: socket.id });
+        io.to(to).emit('video-offer', { sdp, from: socket.id });
     });
 
     socket.on('video-answer', ({ sdp, to }) => {
-        socket.to(to).emit('video-answer', { sdp, from: socket.id });
+        io.to(to).emit('video-answer', { sdp, from: socket.id });
     });
 
     socket.on('new-ice-candidate', ({ candidate, to }) => {
-        socket.to(to).emit('new-ice-candidate', { candidate, from: socket.id });
+        io.to(to).emit('new-ice-candidate', { candidate, from: socket.id });
     });
 
+    socket.on('audio-speaking', ({ isSpeaking }) => {
+        if (!socket.roomId) return;
+        socket.to(socket.roomId).emit('user-audio-speaking', { id: socket.id, isSpeaking });
+    });
+
+    // --- CHAT EN DIRECT ---
     socket.on('send-chat-message', ({ message }) => {
-        const roomId = socket.roomId;
-        if (roomId && message?.trim()) {
-            io.to(roomId).emit('chat-message', {
-                username: socket.username,
-                message: message.trim(),
-                color: socket.userColor,
-                isSystem: false
-            });
-        }
+        if (!socket.roomId) return;
+        io.to(socket.roomId).emit('chat-message', {
+            username: socket.username,
+            message: message,
+            color: socket.userColor,
+            isSystem: false
+        });
     });
 
-    socket.on('video-action', (data) => {
-        if (socket.roomId) socket.to(socket.roomId).emit('user-video-action', data);
-    });
-
-    socket.on('change-video', (data) => {
-        const roomId = socket.roomId;
-        if (roomId && roomsData[roomId]) {
-            roomsData[roomId].currentVideo = data;
-            socket.to(roomId).emit('user-changed-video', data);
-        }
-    });
-
+    // --- FILE D'ATTENTE / PLAYLIST ---
     socket.on('add-to-playlist', ({ videoUrl }) => {
-        const roomId = socket.roomId;
-        if (roomId && videoUrl) {
-            let title = "Lien Vidéo";
-            if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) title = "Vidéo YouTube";
-            else if (videoUrl.includes('twitch.tv')) title = "Stream Twitch";
-            else title = videoUrl.split('/').pop().split('?')[0] || "Fichier MP4";
+        if (!socket.roomId || !rooms[socket.roomId]) return;
+        const room = rooms[socket.roomId];
 
-            const newItem = { id: Math.random().toString(36).substring(2, 7), url: videoUrl, title };
-            roomsData[roomId].playlist.push(newItem);
-            io.to(roomId).emit('update-playlist', roomsData[roomId].playlist);
-        }
+        const newItem = {
+            id: 'item-' + Math.random().toString(36).substring(2, 9),
+            url: videoUrl,
+            title: videoUrl.length > 35 ? videoUrl.substring(0, 35) + '...' : videoUrl
+        };
+
+        room.playlist.push(newItem);
+        io.to(socket.roomId).emit('update-playlist', room.playlist);
     });
 
     socket.on('remove-from-playlist', ({ itemId }) => {
-        const roomId = socket.roomId;
-        if (roomId && roomsData[roomId]) {
-            roomsData[roomId].playlist = roomsData[roomId].playlist.filter(item => item.id !== itemId);
-            io.to(roomId).emit('update-playlist', roomsData[roomId].playlist);
-        }
+        if (!socket.roomId || !rooms[socket.roomId]) return;
+        const room = rooms[socket.roomId];
+        room.playlist = room.playlist.filter(item => item.id !== itemId);
+        io.to(socket.roomId).emit('update-playlist', room.playlist);
     });
 
+    // --- MINI-JEU 1 : MORPION (Tic-Tac-Toe) ---
+    socket.on('ttt-move', ({ idx, symbol }) => {
+        if (!socket.roomId || !rooms[socket.roomId]) return;
+        const state = rooms[socket.roomId].tttState;
+
+        state.board[idx] = symbol;
+        state.turn = symbol === 'X' ? 'O' : 'X';
+
+        io.to(socket.roomId).emit('ttt-update', state);
+    });
+
+    socket.on('ttt-reset', () => {
+        if (!socket.roomId || !rooms[socket.roomId]) return;
+        rooms[socket.roomId].tttState = getInitialTTTState();
+        io.to(socket.roomId).emit('ttt-update', rooms[socket.roomId].tttState);
+    });
+
+    // --- MINI-JEU 2 : PUISSANCE 4 ---
+    socket.on('c4-move', ({ col, player }) => {
+        if (!socket.roomId || !rooms[socket.roomId]) return;
+        const state = rooms[socket.roomId].c4State;
+
+        // Fait tomber le jeton dans la plus basse case disponible de la colonne
+        for (let r = 5; r >= 0; r--) {
+            if (state.board[r][col] === 0) {
+                state.board[r][col] = player;
+                state.turn = player === 1 ? 2 : 1;
+                break;
+            }
+        }
+
+        io.to(socket.roomId).emit('c4-update', state);
+    });
+
+    socket.on('c4-reset', () => {
+        if (!socket.roomId || !rooms[socket.roomId]) return;
+        rooms[socket.roomId].c4State = getInitialC4State();
+        io.to(socket.roomId).emit('c4-update', rooms[socket.roomId].c4State);
+    });
+
+    // --- DÉCONNEXION ---
     socket.on('disconnect', () => {
+        console.log(`[-] Client déconnecté : ${socket.id}`);
         const roomId = socket.roomId;
-        const socketId = socket.id;
 
-        if (roomId && roomsData[roomId]) {
-            const userData = roomsData[roomId].users[socketId];
+        if (roomId && rooms[roomId]) {
+            const room = rooms[roomId];
 
-            if (userData) {
-                // On met l'utilisateur en "sursis" pendant 2.5 secondes avant de l'effacer définitivement
-                disconnectTimeouts[socketId] = setTimeout(() => {
-                    if (roomsData[roomId] && roomsData[roomId].users[socketId]) {
-                        delete roomsData[roomId].users[socketId];
-                        
-                        socket.to(roomId).emit('user-left-webrtc', { id: socketId });
-                        io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
+            // Retirer l'utilisateur de la liste
+            room.users = room.users.filter(u => u.id !== socket.id);
 
-                        io.to(roomId).emit('chat-message', {
-                            username: 'Système',
-                            message: `${userData.username} a quitté le salon.`,
-                            color: '#9ca3af',
-                            isSystem: true
-                        });
+            // Informer les pairs WebRTC
+            socket.to(roomId).emit('user-left-webrtc', { id: socket.id });
 
-                        if (Object.keys(roomsData[roomId].users).length === 0) delete roomsData[roomId];
-                    }
-                    delete disconnectTimeouts[socketId];
-                }, 2500); // 2.5 secondes laissent largement le temps à un F5 de s'exécuter
+            if (room.users.length > 0) {
+                // Notifier le départ dans le chat
+                io.to(roomId).emit('chat-message', {
+                    username: 'Système',
+                    message: `${socket.username} a quitté le salon.`,
+                    color: '#ff4e50',
+                    isSystem: true
+                });
+
+                // Mettre à jour la liste des membres
+                io.to(roomId).emit('update-users', room.users);
+            } else {
+                // Supprimer le salon de la mémoire si plus personne n'est présent
+                delete rooms[roomId];
             }
         }
     });
 });
 
+// Lancement du serveur sur le port 3000
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Serveur actif sur le port ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`=============================================`);
+    console.log(`🚀 Serveur StreamHub lancé sur le port ${PORT}`);
+    console.log(`🔗 Accès local : http://localhost:${PORT}`);
+    console.log(`=============================================`);
+});

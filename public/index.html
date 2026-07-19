@@ -16,7 +16,6 @@
             --card-border: rgba(255, 255, 255, 0.06);
             --accent-glow: rgba(138, 43, 226, 0.3);
             
-            /* Couleurs thématiques */
             --primary: #8a2be2;
             --primary-gradient: linear-gradient(135deg, #a044ff 0%, #6a11cb 100%);
             --secondary-gradient: linear-gradient(135deg, #ff007f 0%, #7928ca 100%);
@@ -27,9 +26,7 @@
             --text-muted: #9ca3af;
         }
 
-        /* Styles Généraux & Scrollbar */
         * { box-sizing: border-box; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.13); border-radius: 20px; }
@@ -40,38 +37,28 @@
             background: var(--bg-dark);
             background-image: var(--bg-gradient);
             color: var(--text-main);
-            margin: 0;
-            padding: 40px 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin: 0; padding: 40px 20px; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
         }
 
         .container { width: 100%; max-width: 1400px; }
         
-        /* Header moderne */
         header { text-align: center; margin-bottom: 40px; position: relative; }
         header h1 {
             font-size: 3.5rem; font-weight: 800; margin: 0; letter-spacing: -1px;
             background: linear-gradient(45deg, #ff007f, #8a2be2, #00f2fe);
-            background-size: 200% auto;
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             animation: shine 5s linear infinite;
         }
         header p { color: var(--text-muted); font-size: 1.1rem; margin-top: 8px; font-weight: 500; }
-
         @keyframes shine { to { background-position: 200% center; } }
 
-        /* Écrans de transition */
         #auth-screen { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; max-width: 850px; margin: 40px auto; }
         #room-screen { display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Cartes au style Glassmorphism */
         .card {
-            background: var(--card-bg); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--card-border); padding: 25px; border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.1);
         }
@@ -79,7 +66,6 @@
         .card h3 { margin: 0 0 18px 0; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 12px; color: #fff; }
         .card h3 i { background: linear-gradient(45deg, #ff007f, #8a2be2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* Formulaires & Inputs épurés */
         .input-group { display: flex; gap: 10px; margin-bottom: 15px; position: relative; }
         input {
             flex: 1; padding: 14px 18px; background: rgba(0, 0, 0, 0.3);
@@ -88,7 +74,6 @@
         }
         input:focus { border-color: var(--primary); background: rgba(0, 0, 0, 0.5); outline: none; box-shadow: 0 0 15px rgba(138, 43, 226, 0.2); }
 
-        /* Micro-interactions sur les Boutons */
         button {
             padding: 13px 22px; background: var(--primary-gradient);
             border: none; border-radius: 12px; color: white; font-weight: 700; font-family: inherit;
@@ -106,7 +91,6 @@
         .btn-webrtc { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #05050d; font-weight: 700; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3); }
         .btn-sync { background: var(--secondary-gradient); color: white; font-weight: 700; margin-top: 0; box-shadow: 0 4px 15px rgba(255, 0, 127, 0.3); }
 
-        /* Layout Principal Asymétrique */
         #room-layout { display: grid; grid-template-columns: 1fr 420px; gap: 30px; align-items: start; }
         @media (max-width: 1150px) { #room-layout { grid-template-columns: 1fr; } #auth-screen { grid-template-columns: 1fr; } }
 
@@ -116,7 +100,6 @@
             backdrop-filter: blur(10px); letter-spacing: 0.5px;
         }
 
-        /* Zone Vidéo Cinématique */
         .media-container {
             position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
             border-radius: 16px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); margin-top: 15px;
@@ -132,7 +115,6 @@
         .volume-slider { -webkit-appearance: none; width: 130px; height: 5px; background: rgba(255, 255, 255, 0.1); outline: none; border-radius: 10px; }
         .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #00f2fe; cursor: pointer; box-shadow: 0 0 10px #00f2fe; }
 
-        /* Grille Visio WebRTC */
         .video-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 12px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.4); padding: 12px; border-radius: 16px;
@@ -150,46 +132,61 @@
             max-width: 85%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* Badges & Rôles (Crown/Admin) */
+        /* --- SYSTÈME D'ONGLETS POUR LE PANEL DROIT --- */
+        .tab-nav { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px; }
+        .tab-btn {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+            padding: 8px 14px; font-size: 0.85rem; border-radius: 10px; color: var(--text-muted); cursor: pointer; flex: 1;
+        }
+        .tab-btn.active { background: var(--primary-gradient); color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* Badges & Membres */
         .users-badge { background: linear-gradient(45deg, #00f2fe, #4facfe); color: #000; padding: 2px 9px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; margin-left: auto; }
         .user-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: 12px; max-height: 75px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.02); }
         .user-tag { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-        
         .badge-admin {
-            background: linear-gradient(45deg, #ffd700, #ffa500);
-            color: #000; font-size: 0.7rem; font-weight: 800; padding: 1px 6px; border-radius: 6px;
-            display: inline-flex; align-items: center; gap: 3px; margin-right: 4px;
-            box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-            animation: pulse-gold 2s infinite alternate;
+            background: linear-gradient(45deg, #ffd700, #ffa500); color: #000; font-size: 0.7rem; font-weight: 800; padding: 1px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px; margin-right: 4px; box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
         }
-        @keyframes pulse-gold { from { filter: drop-shadow(0 0 2px rgba(255,215,0,0.4)); } to { filter: drop-shadow(0 0 7px rgba(255,215,0,0.8)); } }
 
-        /* Chat & Animations Messages */
-        .chat-box { height: 280px; background: rgba(0, 0, 0, 0.3); border-radius: 14px; padding: 15px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.02); }
-        .chat-msg { 
-            font-size: 0.88rem; line-height: 1.4; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); 
-            border-radius: 12px; width: fit-content; max-width: 90%; word-break: break-word;
-            animation: msgIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-        }
-        @keyframes msgIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        /* Chat */
+        .chat-box { height: 260px; background: rgba(0, 0, 0, 0.3); border-radius: 14px; padding: 15px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.02); }
+        .chat-msg { font-size: 0.88rem; line-height: 1.4; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; width: fit-content; max-width: 90%; word-break: break-word; animation: msgIn 0.25s ease both; }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .chat-msg .name { font-weight: 700; margin-right: 6px; }
-        .chat-msg.system { color: var(--text-muted); font-style: italic; text-align: center; font-size: 0.8rem; background: transparent; width: 100%; max-width: 100%; border: none; padding: 2px 0; animation: fadeIn 0.3s ease; }
+        .chat-msg.system { color: var(--text-muted); font-style: italic; text-align: center; font-size: 0.8rem; background: transparent; width: 100%; max-width: 100%; border: none; padding: 2px 0; }
         
-        /* Panneau Sélecteur d'Emojis */
         .emoji-trigger-btn { background: transparent; box-shadow: none; padding: 0 12px; font-size: 1.2rem; color: var(--text-muted); }
-        .emoji-trigger-btn:hover { color: #fff; transform: scale(1.1); background: transparent; box-shadow: none; }
         .emoji-picker {
-            position: absolute; bottom: 60px; right: 10px; background: #110d26; 
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px;
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; font-size: 1.3rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 100; opacity: 0; transform: translateY(10px); pointer-events: none;
+            position: absolute; bottom: 60px; right: 10px; background: #110d26; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; font-size: 1.3rem; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 100; opacity: 0; transform: translateY(10px); pointer-events: none;
         }
         .emoji-picker.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
         .emoji-item { cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; }
         .emoji-item:hover { background: rgba(255,255,255,0.1); transform: scale(1.15); }
 
-        /* Playlist / File d'attente */
-        .playlist-box { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+        /* --- STYLES MINI-JEUX (Morpion & Puissance 4) --- */
+        .game-status { text-align: center; font-weight: 700; font-size: 0.9rem; margin-bottom: 12px; color: #00f2fe; }
+        
+        /* Plateau Morpion */
+        .ttt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 220px; height: 220px; margin: 0 auto 15px auto; }
+        .ttt-cell {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; cursor: pointer;
+        }
+        .ttt-cell:hover { background: rgba(255, 255, 255, 0.12); }
+        .ttt-cell.x { color: #ff007f; text-shadow: 0 0 10px #ff007f; }
+        .ttt-cell.o { color: #00f2fe; text-shadow: 0 0 10px #00f2fe; }
+
+        /* Plateau Puissance 4 */
+        .c4-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; background: rgba(20, 15, 45, 0.8); padding: 10px; border-radius: 14px; margin: 0 auto 15px auto; border: 1px solid rgba(255,255,255,0.08); }
+        .c4-cell { aspect-ratio: 1; background: rgba(0,0,0,0.5); border-radius: 50%; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .c4-cell:hover { border-color: rgba(255,255,255,0.3); }
+        .c4-cell.p1 { background: #ff007f; box-shadow: inset 0 0 8px #000, 0 0 10px #ff007f; }
+        .c4-cell.p2 { background: #ffd700; box-shadow: inset 0 0 8px #000, 0 0 10px #ffd700; }
+
+        /* Playlist */
+        .playlist-box { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
         .playlist-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); padding: 10px 14px; border-radius: 12px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.03); border-left: 4px solid var(--primary); }
         .playlist-item:hover { background: rgba(255, 255, 255, 0.06); }
         .playlist-item .title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; font-weight: 500; }
@@ -206,7 +203,6 @@
             <p>Salons de streaming privés synchronisés avec Visio HD</p>
         </header>
         
-        <!-- Écran de Connexion / Création -->
         <div id="auth-screen">
             <div class="card" style="grid-column: 1 / -1; margin-bottom: 5px;">
                 <h3><i class="fa-solid fa-user-astronaut"></i> Votre Profil</h3>
@@ -225,12 +221,11 @@
             </div>
         </div>
 
-        <!-- Écran du Salon Principal -->
         <div id="room-screen">
             <div class="room-status" id="room-display-id">Connecté</div>
 
             <div id="room-layout">
-                <!-- Colonne Gauche : Lecteur Média -->
+                <!-- Colonne Gauche : Lecteur -->
                 <div class="left-col">
                     <div class="card">
                         <h3><i class="fa-solid fa-play-pause"></i> Lecteur Synchro (YouTube, Twitch, Direct MP4)</h3>
@@ -252,37 +247,65 @@
                     </div>
                 </div>
 
-                <!-- Colonne Droite : Widgets de communication et listes -->
+                <!-- Colonne Droite : Communication, Jeux & Playlist -->
                 <div class="right-col">
-                    <!-- Section Visio Caméra -->
                     <div class="card">
                         <h3><i class="fa-solid fa-video"></i> Salons Caméras / Audio</h3>
                         <button id="toggle-cam-btn" class="btn-block btn-webrtc"><i class="fa-solid fa-camera"></i> Activer ma Caméra & Micro</button>
                         <div class="video-grid" id="video-grid"></div>
                     </div>
 
-                    <!-- Section Chat Room -->
+                    <!-- ONGLETS MULTI-WIDGETS (Chat / Morpion / Puissance 4) -->
                     <div class="card">
-                        <h3><i class="fa-solid fa-comments"></i> Chat en direct <span class="users-badge" id="user-count">0</span></h3>
-                        <div class="user-list" id="users-container"></div>
-                        <div class="chat-box" id="chat-messages"></div>
-                        <div class="input-group">
-                            <button class="emoji-trigger-btn" id="emoji-btn">😎</button>
-                            <input type="text" id="chat-input" placeholder="Tapez votre message...">
-                            <button id="send-chat-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                        <div class="tab-nav">
+                            <button class="tab-btn active" onclick="switchTab('tab-chat')"><i class="fa-solid fa-comments"></i> Chat</button>
+                            <button class="tab-btn" onclick="switchTab('tab-morpion')"><i class="fa-solid fa-xmark"></i> Morpion</button>
+                            <button class="tab-btn" onclick="switchTab('tab-p4')"><i class="fa-solid fa-circle-dot"></i> P4</button>
+                        </div>
 
-                            <!-- Sélecteur d'émojis Pop-up -->
-                            <div class="emoji-picker" id="emoji-picker">
-                                <div class="emoji-item">😂</div><div class="emoji-item">😮</div><div class="emoji-item">🔥</div>
-                                <div class="emoji-item">👍</div><div class="emoji-item">🎉</div><div class="emoji-item">❤️</div>
-                                <div class="emoji-item">🚀</div><div class="emoji-item">👀</div><div class="emoji-item">👑</div>
-                                <div class="emoji-item">🤔</div><div class="emoji-item">🍿</div><div class="emoji-item">💯</div>
+                        <!-- TAB 1 : CHAT -->
+                        <div id="tab-chat" class="tab-content active">
+                            <div style="display:flex; align-items:center; margin-bottom:10px;">
+                                <span style="font-size:0.9rem; font-weight:700;">Membres</span>
+                                <span class="users-badge" id="user-count">0</span>
                             </div>
+                            <div class="user-list" id="users-container"></div>
+                            <div class="chat-box" id="chat-messages"></div>
+                            <div class="input-group">
+                                <button class="emoji-trigger-btn" id="emoji-btn">😎</button>
+                                <input type="text" id="chat-input" placeholder="Tapez votre message...">
+                                <button id="send-chat-btn"><i class="fa-solid fa-paper-plane"></i></button>
+
+                                <div class="emoji-picker" id="emoji-picker">
+                                    <div class="emoji-item">😂</div><div class="emoji-item">😮</div><div class="emoji-item">🔥</div>
+                                    <div class="emoji-item">👍</div><div class="emoji-item">🎉</div><div class="emoji-item">❤️</div>
+                                    <div class="emoji-item">🚀</div><div class="emoji-item">👀</div><div class="emoji-item">👑</div>
+                                    <div class="emoji-item">🤔</div><div class="emoji-item">🍿</div><div class="emoji-item">💯</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2 : MORPION -->
+                        <div id="tab-morpion" class="tab-content">
+                            <div class="game-status" id="ttt-status">Prêt pour un Morpion !</div>
+                            <div class="ttt-grid" id="ttt-grid">
+                                <div class="ttt-cell" data-idx="0"></div><div class="ttt-cell" data-idx="1"></div><div class="ttt-cell" data-idx="2"></div>
+                                <div class="ttt-cell" data-idx="3"></div><div class="ttt-cell" data-idx="4"></div><div class="ttt-cell" data-idx="5"></div>
+                                <div class="ttt-cell" data-idx="6"></div><div class="ttt-cell" data-idx="7"></div><div class="ttt-cell" data-idx="8"></div>
+                            </div>
+                            <button class="btn-block btn-secondary" id="ttt-reset-btn"><i class="fa-solid fa-rotate-right"></i> Nouvelle Partie</button>
+                        </div>
+
+                        <!-- TAB 3 : PUISSANCE 4 -->
+                        <div id="tab-p4" class="tab-content">
+                            <div class="game-status" id="c4-status">Prêt pour un Puissance 4 !</div>
+                            <div class="c4-grid" id="c4-grid"></div>
+                            <button class="btn-block btn-secondary" id="c4-reset-btn"><i class="fa-solid fa-rotate-right"></i> Nouvelle Partie</button>
                         </div>
                     </div>
 
-                    <!-- Section File d'attente / Playlist -->
-                    <div class="card">
+                    <!-- Playlist -->
+                    <div class="card" style="margin-top:20px;">
                         <h3><i class="fa-solid fa-list-ol"></i> Prochaines Vidéos</h3>
                         <div class="input-group">
                             <input type="text" id="playlist-url-input" placeholder="Ajouter un lien à la suite...">
@@ -344,59 +367,50 @@
         let speechInterval = null;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        // --- GÉNÉRATEUR SYSTÈME DE NOTIFICATIONS SONORES (Discret & High-tech) ---
+        // NAVIGATION ONGLETS
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // NOTIFICATIONS SONORES
         function playSystemSound(type) {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
                 if (type === 'message') {
-                    // Petit "bip" court et cristallin
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // Ré5
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, ctx.currentTime);
                     gain.gain.setValueAtTime(0.08, ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
                     osc.start(); osc.stop(ctx.currentTime + 0.12);
                 } else if (type === 'join') {
-                    // Double note montante harmonieuse
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(440, ctx.currentTime); // La4
-                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // Mi5
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
                     gain.gain.setValueAtTime(0.06, ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
                     osc.start(); osc.stop(ctx.currentTime + 0.25);
                 }
-            } catch (e) { console.log("Audio bloqué par le navigateur tant qu'on clique pas."); }
+            } catch (e) {}
         }
 
-        // --- GESTION DU SÉLECTEUR D'EMOJIS ---
-        emojiBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            emojiPicker.classList.toggle('active');
-        });
+        // EMOJIS
+        emojiBtn.addEventListener('click', (e) => { e.stopPropagation(); emojiPicker.classList.toggle('active'); });
         document.querySelectorAll('.emoji-item').forEach(item => {
-            item.addEventListener('click', () => {
-                chatInput.value += item.innerText;
-                chatInput.focus();
-                emojiPicker.classList.remove('active');
-            });
+            item.addEventListener('click', () => { chatInput.value += item.innerText; chatInput.focus(); emojiPicker.classList.remove('active'); });
         });
         document.addEventListener('click', () => emojiPicker.classList.remove('active'));
 
-        // Profil & Persistance
+        // PROFIL
         const savedUsername = localStorage.getItem('streamhub_username');
-        if (savedUsername) {
-            usernameInput.value = savedUsername;
-        } else {
-            usernameInput.value = 'Invité_' + Math.floor(Math.random() * 1000);
-        }
+        if (savedUsername) usernameInput.value = savedUsername;
+        else usernameInput.value = 'Invité_' + Math.floor(Math.random() * 1000);
 
         const urlParams = new URLSearchParams(window.location.search);
         const urlRoomId = urlParams.get('room');
-        if (urlRoomId) { setTimeout(() => { initializeRoom(urlRoomId); }, 300); }
+        if (urlRoomId) setTimeout(() => { initializeRoom(urlRoomId); }, 300);
 
         if (btnCreateRoom) btnCreateRoom.addEventListener('click', () => initializeRoom('room-' + Math.random().toString(36).substring(2, 9)));
         if (btnJoinRoom) btnJoinRoom.addEventListener('click', () => roomInput.value.trim() && initializeRoom(roomInput.value.trim()));
@@ -405,15 +419,89 @@
             currentRoomId = roomId;
             const pseudo = usernameInput.value.trim() || 'Anonyme';
             localStorage.setItem('streamhub_username', pseudo);
-
             window.history.pushState({}, '', `?room=${roomId}`);
             socket.emit('join-room', { roomId, username: pseudo });
             authScreen.style.display = 'none';
             roomScreen.style.display = 'block';
             roomDisplayId.innerHTML = `<i class="fa-solid fa-hashtag"></i> ID unique du salon : <strong style="color:#00f2fe">${roomId}</strong>`;
+            initP4Grid();
         }
 
-        // --- GESTION PAROLE & WEBRTC ---
+        // --- MINI-JEU 1 : MORPION (Tic-Tac-Toe) ---
+        let tttBoard = Array(9).fill('');
+        let tttTurn = 'X';
+        const tttCells = document.querySelectorAll('.ttt-cell');
+        const tttStatus = document.getElementById('ttt-status');
+
+        tttCells.forEach(cell => {
+            cell.addEventListener('click', () => {
+                const idx = cell.getAttribute('data-idx');
+                if (tttBoard[idx] === '' && !checkTTTWinner()) {
+                    socket.emit('ttt-move', { idx, symbol: tttTurn });
+                }
+            });
+        });
+
+        document.getElementById('ttt-reset-btn').addEventListener('click', () => socket.emit('ttt-reset'));
+
+        socket.on('ttt-update', ({ board, turn }) => {
+            tttBoard = board; tttTurn = turn;
+            tttCells.forEach((c, i) => {
+                c.innerText = board[i];
+                c.className = 'ttt-cell ' + (board[i] === 'X' ? 'x' : board[i] === 'O' ? 'o' : '');
+            });
+            const winner = checkTTTWinner();
+            if (winner) {
+                tttStatus.innerText = winner === 'Tie' ? "Match Nul !" : `Victoire pour les ${winner} ! 🎉`;
+            } else {
+                tttStatus.innerText = `C'est au tour des : ${tttTurn}`;
+            }
+        });
+
+        function checkTTTWinner() {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (let w of wins) {
+                if (tttBoard[w[0]] && tttBoard[w[0]] === tttBoard[w[1]] && tttBoard[w[0]] === tttBoard[w[2]]) return tttBoard[w[0]];
+            }
+            if (!tttBoard.includes('')) return 'Tie';
+            return null;
+        }
+
+        // --- MINI-JEU 2 : PUISSANCE 4 ---
+        let c4Board = Array(6).fill(null).map(() => Array(7).fill(0));
+        let c4Turn = 1; // 1 = Rouge (P1), 2 = Jaune (P2)
+        const c4Grid = document.getElementById('c4-grid');
+        const c4Status = document.getElementById('c4-status');
+
+        function initP4Grid() {
+            c4Grid.innerHTML = '';
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 7; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'c4-cell';
+                    cell.dataset.col = c;
+                    cell.addEventListener('click', () => socket.emit('c4-move', { col: c, player: c4Turn }));
+                    c4Grid.appendChild(cell);
+                }
+            }
+        }
+
+        document.getElementById('c4-reset-btn').addEventListener('click', () => socket.emit('c4-reset'));
+
+        socket.on('c4-update', ({ board, turn }) => {
+            c4Board = board; c4Turn = turn;
+            const cells = c4Grid.querySelectorAll('.c4-cell');
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 7; c++) {
+                    const idx = r * 7 + c;
+                    const val = board[r][c];
+                    cells[idx].className = 'c4-cell ' + (val === 1 ? 'p1' : val === 2 ? 'p2' : '');
+                }
+            }
+            c4Status.innerText = `Au tour du Joueur ${c4Turn === 1 ? '🔴 (Rouge)' : '🟡 (Jaune)'}`;
+        });
+
+        // --- WEBRTC & DÉTECTION VOCALE ---
         function startSpeechDetection(stream) {
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -438,7 +526,7 @@
                         socket.emit('audio-speaking', { isSpeaking });
                     }
                 }, 150);
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
 
         function stopSpeechDetection() {
@@ -508,7 +596,7 @@
         socket.on('user-left-webrtc', ({ id }) => { if(peerConnections[id]) { peerConnections[id].close(); delete peerConnections[id]; } const el = document.getElementById(`video-${id}`); if(el) el.remove(); });
         socket.on('user-audio-speaking', ({ id, isSpeaking }) => { const rb = document.getElementById(`video-${id}`); if (rb) isSpeaking ? rb.classList.add('speaking') : rb.classList.remove('speaking'); });
 
-        // --- CODE LECTEUR & LOGIQUE INTERNE ---
+        // --- LECTEUR MÉDIA ---
         btnSyncForce.addEventListener('click', () => socket.emit('request-sync-force'));
         socket.on('get-current-time-for-sync', ({ requesterId }) => {
             let currentTime = 0, action = 'pause';
@@ -592,7 +680,7 @@
             setTimeout(() => isSyncing = false, 400);
         });
 
-        // --- COMPOSANTS AUXILIAIRES ---
+        // --- EVENEMENTS CHAT & PLAYLIST ---
         function launchFromPlaylist(url, id) {
             let type = 'mp4'; if (url.includes('youtube.com') || url.includes('youtu.be')) type = 'youtube'; else if (url.includes('twitch.tv')) type = 'twitch';
             const videoData = { type, url }; loadMediaSource(videoData); socket.emit('change-video', videoData); socket.emit('remove-from-playlist', { itemId: id });
@@ -605,7 +693,6 @@
         socket.on('update-users', (list) => { 
             userCount.innerText = list.length; usersContainer.innerHTML = ''; 
             list.forEach((u, index) => { 
-                // Le premier utilisateur de la liste (index 0) est désigné Admin de session
                 const roleBadge = index === 0 ? `<span class="badge-admin"><i class="fa-solid fa-crown"></i> Admin</span>` : '';
                 usersContainer.innerHTML += `<div class="user-tag" style="border-color: ${u.color}44;">${roleBadge}<i class="fa-solid fa-circle" style="color: ${u.color}; font-size: 0.5rem;"></i> ${u.username}</div>`; 
             }); 
@@ -614,11 +701,10 @@
         socket.on('chat-message', ({ username, message, color, isSystem }) => { 
             if (isSystem) {
                 chatMessages.innerHTML += `<div class="chat-msg system"><i class="fa-solid fa-robot"></i> ${message}</div>`;
-                playSystemSound('join'); // Son d'événement / connexion
+                playSystemSound('join');
             } else {
-                // Détecter si le message vient de l'Admin (on simule ici via la couleur ou un tag système pour l'exemple)
                 chatMessages.innerHTML += `<div class="chat-msg"><span class="name" style="color: ${color};">${username}:</span>${message}</div>`; 
-                playSystemSound('message'); // Son de message reçu
+                playSystemSound('message');
             }
             chatMessages.scrollTop = chatMessages.scrollHeight; 
         });
