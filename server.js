@@ -12,6 +12,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const roomsData = {};
 const CHAT_COLORS = ['#ff007f', '#00f2fe', '#4facfe', '#00ff87', '#f9d423', '#ff4e50', '#e100ff', '#00ffcc'];
 
+// Pour stocker les timers des utilisateurs qui actualisent la page
+const disconnectTimeouts = {};
+
 io.on('connection', (socket) => {
     console.log(`[Connecté] : ${socket.id}`);
 
@@ -20,10 +23,28 @@ io.on('connection', (socket) => {
         socket.roomId = roomId;
         const user = username ? username.trim() : 'Anonyme';
         socket.username = user;
-        socket.userColor = CHAT_COLORS[Math.floor(Math.random() * CHAT_COLORS.length)];
 
         if (!roomsData[roomId]) {
             roomsData[roomId] = { playlist: [], users: {}, currentVideo: null };
+        }
+
+        // --- GESTION DU RECHARGEMENT (ANTI-SPAM CHAT) ---
+        // On cherche si cet utilisateur était déjà là récemment (même pseudo dans la même room)
+        const alreadyExisted = Object.values(roomsData[roomId].users).find(u => u.username === user);
+        
+        if (alreadyExisted) {
+            // S'il y a un timer de déconnexion en cours pour ce pseudo, on l'annule !
+            if (disconnectTimeouts[alreadyExisted.id]) {
+                clearTimeout(disconnectTimeouts[alreadyExisted.id]);
+                delete disconnectTimeouts[alreadyExisted.id];
+            }
+            // On récupère sa couleur d'origine pour garder une cohérence graphique
+            socket.userColor = alreadyExisted.color;
+            // On supprime l'ancienne entrée temporaire pour mettre la nouvelle à jour
+            delete roomsData[roomId].users[alreadyExisted.id];
+        } else {
+            // Nouvel utilisateur classique
+            socket.userColor = CHAT_COLORS[Math.floor(Math.random() * CHAT_COLORS.length)];
         }
 
         roomsData[roomId].users[socket.id] = {
@@ -32,7 +53,6 @@ io.on('connection', (socket) => {
             color: socket.userColor
         };
 
-        // Envoi de la vidéo actuelle au nouvel arrivant (YouTube, Twitch ou MP4)
         if (roomsData[roomId].currentVideo) {
             socket.emit('user-changed-video', roomsData[roomId].currentVideo);
         }
@@ -41,29 +61,28 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
         socket.emit('update-playlist', roomsData[roomId].playlist);
         
-        io.to(roomId).emit('chat-message', {
-            username: 'Système',
-            message: `${user} a rejoint le salon.`,
-            color: '#9ca3af',
-            isSystem: true
-        });
+        // On n'envoie le message de bienvenue que si ce n'est pas un simple rafraîchissement de page
+        if (!alreadyExisted) {
+            io.to(roomId).emit('chat-message', {
+                username: 'Système',
+                message: `${user} a rejoint le salon.`,
+                color: '#9ca3af',
+                isSystem: true
+            });
+        }
     });
 
-    // --- INDICATEUR DE PAROLE (AUDIO DETECT) ---
     socket.on('audio-speaking', ({ isSpeaking }) => {
         if (socket.roomId) {
             socket.to(socket.roomId).emit('user-audio-speaking', { id: socket.id, isSpeaking });
         }
     });
 
-    // --- RE-FORCE SYNC REQUEST ---
-    // Quand un utilisateur clique sur "Forcer la synchro", le serveur demande au premier de la salle sa position
     socket.on('request-sync-force', () => {
         const roomId = socket.roomId;
         if (roomId && roomsData[roomId]) {
             const users = Object.keys(roomsData[roomId].users);
             if (users.length > 1) {
-                // On demande au premier utilisateur connecté (le "host" implicite) d'envoyer son timestamp actuel
                 const masterUser = users[0] === socket.id ? users[1] : users[0];
                 io.to(masterUser).emit('get-current-time-for-sync', { requesterId: socket.id });
             }
@@ -74,7 +93,6 @@ io.on('connection', (socket) => {
         io.to(requesterId).emit('user-video-action', { action, currentTime });
     });
 
-    // --- SIGNALING WEBRTC ---
     socket.on('request-peers-trigger', () => {
         const roomId = socket.roomId;
         if (roomId) {
@@ -94,7 +112,6 @@ io.on('connection', (socket) => {
         socket.to(to).emit('new-ice-candidate', { candidate, from: socket.id });
     });
 
-    // --- ACTIONS DE SALON ---
     socket.on('send-chat-message', ({ message }) => {
         const roomId = socket.roomId;
         if (roomId && message?.trim()) {
@@ -114,7 +131,7 @@ io.on('connection', (socket) => {
     socket.on('change-video', (data) => {
         const roomId = socket.roomId;
         if (roomId && roomsData[roomId]) {
-            roomsData[roomId].currentVideo = data; // Stocke tout l'objet { type, url }
+            roomsData[roomId].currentVideo = data;
             socket.to(roomId).emit('user-changed-video', data);
         }
     });
@@ -143,23 +160,32 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         const roomId = socket.roomId;
-        if (roomId && roomsData[roomId]) {
-            const userData = roomsData[roomId].users[socket.id];
-            delete roomsData[roomId].users[socket.id];
+        const socketId = socket.id;
 
-            socket.to(roomId).emit('user-left-webrtc', { id: socket.id });
-            io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
+        if (roomId && roomsData[roomId]) {
+            const userData = roomsData[roomId].users[socketId];
 
             if (userData) {
-                io.to(roomId).emit('chat-message', {
-                    username: 'Système',
-                    message: `${userData.username} a quitté le salon.`,
-                    color: '#9ca3af',
-                    isSystem: true
-                });
-            }
+                // On met l'utilisateur en "sursis" pendant 2.5 secondes avant de l'effacer définitivement
+                disconnectTimeouts[socketId] = setTimeout(() => {
+                    if (roomsData[roomId] && roomsData[roomId].users[socketId]) {
+                        delete roomsData[roomId].users[socketId];
+                        
+                        socket.to(roomId).emit('user-left-webrtc', { id: socketId });
+                        io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
 
-            if (Object.keys(roomsData[roomId].users).length === 0) delete roomsData[roomId];
+                        io.to(roomId).emit('chat-message', {
+                            username: 'Système',
+                            message: `${userData.username} a quitté le salon.`,
+                            color: '#9ca3af',
+                            isSystem: true
+                        });
+
+                        if (Object.keys(roomsData[roomId].users).length === 0) delete roomsData[roomId];
+                    }
+                    delete disconnectTimeouts[socketId];
+                }, 2500); // 2.5 secondes laissent largement le temps à un F5 de s'exécuter
+            }
         }
     });
 });
