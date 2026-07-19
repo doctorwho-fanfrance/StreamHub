@@ -23,17 +23,22 @@ io.on('connection', (socket) => {
         socket.userColor = CHAT_COLORS[Math.floor(Math.random() * CHAT_COLORS.length)];
 
         if (!roomsData[roomId]) {
-            roomsData[roomId] = { playlist: [], users: {} };
+            roomsData[roomId] = { playlist: [], users: {}, currentVideo: null };
         }
 
-        // On stocke aussi l'ID du socket pour la logique WebRTC
+        // On stocke l'ID du socket pour la logique de salon et WebRTC
         roomsData[roomId].users[socket.id] = {
             id: socket.id,
             username: user,
             color: socket.userColor
         };
 
-        // Informer les anciens qu'un nouveau est là pour initier le WebRTC
+        // Si une vidéo est déjà diffusée dans le salon, on l'envoie au nouvel arrivant
+        if (roomsData[roomId].currentVideo) {
+            socket.emit('user-changed-video', { videoUrl: roomsData[roomId].currentVideo });
+        }
+
+        // Informer les anciens qu'un nouveau est là pour tenter d'initier le WebRTC
         socket.to(roomId).emit('user-joined-webrtc', { id: socket.id, username: user });
 
         io.to(roomId).emit('update-users', Object.values(roomsData[roomId].users));
@@ -48,6 +53,15 @@ io.on('connection', (socket) => {
     });
 
     // --- LOGIQUE SIGNALING WEBRTC (LES INTERNES DE L'APPEL) ---
+    
+    // Écouteur manquant : Déclenché quand quelqu'un active sa caméra après être entré dans le salon
+    socket.on('request-peers-trigger', () => {
+        const roomId = socket.roomId;
+        if (roomId) {
+            socket.to(roomId).emit('user-joined-webrtc', { id: socket.id, username: socket.username });
+        }
+    });
+
     socket.on('video-offer', ({ sdp, to }) => {
         socket.to(to).emit('video-offer', { sdp, from: socket.id });
     });
@@ -78,7 +92,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('change-video', (data) => {
-        if (socket.roomId) socket.to(socket.roomId).emit('user-changed-video', data);
+        const roomId = socket.roomId;
+        if (roomId && roomsData[roomId]) {
+            // On sauvegarde l'URL pour les prochains arrivants
+            roomsData[roomId].currentVideo = data.videoUrl;
+            socket.to(roomId).emit('user-changed-video', data);
+        }
     });
 
     socket.on('add-to-playlist', ({ videoUrl }) => {

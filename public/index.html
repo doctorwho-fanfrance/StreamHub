@@ -80,7 +80,7 @@
         .btn-danger { background: linear-gradient(135deg, #ff0055 0%, #990033 100%); }
         .btn-webrtc { background: #00f2fe; color: #000; font-weight: 700; margin-bottom: 10px; }
 
-        /* VIOÉO LECTEUR */
+        /* VIDÉO LECTEUR */
         .media-container {
             position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
             border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); margin-top: 10px;
@@ -94,7 +94,7 @@
         .volume-slider { -webkit-appearance: none; width: 110px; height: 4px; background: rgba(255, 255, 255, 0.2); outline: none; }
         .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-primary); }
 
-        /* --- DESIGN GRILLE DES CAMÉRAS (WEBRTC) --- */
+        /* DESIGN GRILLE DES CAMÉRAS (WEBRTC) */
         .video-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
             gap: 10px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 12px;
@@ -177,7 +177,7 @@
 
                 <!-- DROITE : WEBRTC, CHAT, PLAYLIST -->
                 <div class="right-col">
-                    <!-- ZONE VISIO (AMÉLIORATION 5) -->
+                    <!-- ZONE VISIO -->
                     <div class="card">
                         <h3><i class="fa-solid fa-video"></i> Caméras en direct</h3>
                         <button id="toggle-cam-btn" class="btn-block btn-webrtc"><i class="fa-solid fa-camera"></i> Activer ma Caméra/Micro</button>
@@ -250,8 +250,8 @@
         
         // Variables WebRTC
         let localStream = null;
-        let peerConnections = {}; // Stocke les connexions avec chaque utilisateur { socketId: RTCPeerConnection }
-        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }; // Serveur STUN gratuit de Google
+        let peerConnections = {}; // Stocke les connexions { socketId: RTCPeerConnection }
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('room')) initializeRoom(urlParams.get('room'));
@@ -280,6 +280,7 @@
                 btnToggleCam.innerHTML = `<i class="fa-solid fa-camera"></i> Activer ma Caméra/Micro`;
                 btnToggleCam.classList.remove('btn-danger');
                 btnToggleCam.classList.add('btn-webrtc');
+                
                 // Fermer toutes les connexions existantes
                 Object.keys(peerConnections).forEach(id => {
                     peerConnections[id].close();
@@ -296,7 +297,7 @@
                     btnToggleCam.classList.remove('btn-webrtc');
                     btnToggleCam.classList.add('btn-danger');
 
-                    // Lancer un appel vers tous ceux déjà présents
+                    // Avertir le serveur pour demander aux autres de lancer les offres P2P
                     socket.emit('request-peers-trigger'); 
                 } catch (err) {
                     alert("Impossible d'accéder à la caméra ou au micro. Vérifiez les autorisations.");
@@ -327,31 +328,26 @@
             }
         }
 
-        // Initialiser la connexion peer-to-peer WebRTC
         function initPeerConnection(userId, username, initiateCall = false) {
             if (peerConnections[userId]) return peerConnections[userId];
 
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[userId] = pc;
 
-            // Ajouter notre flux caméra à la connexion
             if (localStream) {
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
             }
 
-            // Quand on reçoit le flux vidéo de l'autre
             pc.ontrack = (event) => {
                 createVideoWrapper(`video-${userId}`, username, event.streams[0], false);
             };
 
-            // Quand on génère un candidat ICE, on l'envoie via le serveur
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
                     socket.emit('new-ice-candidate', { candidate: event.candidate, to: userId });
                 }
             };
 
-            // Si c'est nous qui initions l'appel (le nouvel arrivant qui a sa cam allumée)
             if (initiateCall && localStream) {
                 pc.createOffer()
                     .then(offer => pc.setLocalDescription(offer))
@@ -365,14 +361,12 @@
 
         // --- ÉCOUTEURS SOCKETS WEBRTC ---
         socket.on('user-joined-webrtc', ({ id, username }) => {
-            // Si notre caméra est active, on initie la connexion avec le nouvel arrivant
             if (localStream) {
                 initPeerConnection(id, username, true);
             }
         });
 
         socket.on('video-offer', async ({ sdp, from }) => {
-            // Si on reçoit une offre et qu'on n'a pas encore allumé notre cam, on peut quand même recevoir le flux
             const pc = initPeerConnection(from, 'Ami', false);
             await pc.setRemoteDescription(new RTCSessionDescription(sdp));
             const answer = await pc.createAnswer();
